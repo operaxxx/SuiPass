@@ -24,7 +24,6 @@
     "deploy:mainnet": "sui client publish --network mainnet"
   },
   "devDependencies": {
-    "@mysten/sui-move-docs": "^0.1.0",
     "@mysten/sui": "^1.0.0"
   },
   "engines": {
