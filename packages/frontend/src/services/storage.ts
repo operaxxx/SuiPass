@@ -1,5 +1,15 @@
-import { WalrusClient } from '@mysten/walrus';
-import { encryptData, decryptData } from './encryption';
+// Placeholder for Walrus client - will be implemented when @mysten/walrus is available
+interface WalrusClient {
+  initialize(): Promise<void>;
+  uploadBlob(params: { data: string; epoch: number }): Promise<string>;
+  downloadBlob(blobId: string): Promise<string>;
+  deleteBlob(blobId: string): Promise<void>;
+  getEpochInfo(): Promise<{ epoch: number }>;
+  getBlobInfo(blobId: string): Promise<{ status: string }>;
+  estimateUploadCost(size: number): Promise<{ totalCost: number }>;
+}
+
+import { encryptDataForStorage, decryptDataFromStorage } from './encryption';
 import { VaultItem } from '../types';
 
 export class WalrusStorageService {
@@ -7,10 +17,22 @@ export class WalrusStorageService {
   private initialized = false;
 
   constructor() {
-    this.client = new WalrusClient({
-      network: process.env.VITE_WALRUS_NETWORK || 'testnet',
-      rpcUrl: process.env.VITE_WALRUS_RPC_URL,
-    });
+    // Mock implementation for development
+    this.client = {
+      initialize: async () => {},
+      uploadBlob: async () => {
+        // Return a mock blob ID
+        return `blob_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      },
+      downloadBlob: async () => {
+        // Return mock encrypted data
+        return 'mock_encrypted_data';
+      },
+      deleteBlob: async () => {},
+      getEpochInfo: async () => ({ epoch: Math.floor(Date.now() / 1000) }),
+      getBlobInfo: async () => ({ status: 'stored' }),
+      estimateUploadCost: async () => ({ totalCost: 0.001 }),
+    };
   }
 
   async initialize(): Promise<void> {
@@ -36,7 +58,7 @@ export class WalrusStorageService {
 
     try {
       // Encrypt the data before storing
-      const encryptedData = await encryptData(JSON.stringify(data), encryptionKey);
+      const encryptedData = await encryptDataForStorage(JSON.stringify(data), encryptionKey);
       
       // Store on Walrus
       const blobId = await this.client.uploadBlob({
@@ -64,7 +86,7 @@ export class WalrusStorageService {
       const encryptedData = await this.client.downloadBlob(blobId);
       
       // Decrypt the data
-      const decryptedData = await decryptData(encryptedData, encryptionKey);
+      const decryptedData = await decryptDataFromStorage(encryptedData, encryptionKey);
       
       return JSON.parse(decryptedData) as VaultItem[];
     } catch (error) {

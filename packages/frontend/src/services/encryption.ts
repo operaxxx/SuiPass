@@ -55,7 +55,7 @@ export async function encryptData(
 
   const encrypted = CryptoJS.AES.encrypt(data, derivedKey, {
     iv: CryptoJS.enc.Hex.parse(encryptionIV),
-    mode: CryptoJS.mode.GCM,
+    mode: CryptoJS.mode.CBC,
     padding: CryptoJS.pad.Pkcs7,
   });
 
@@ -80,7 +80,7 @@ export async function decryptData(
     
     const decrypted = CryptoJS.AES.decrypt(encryptedData, derivedKey, {
       iv: CryptoJS.enc.Hex.parse(iv),
-      mode: CryptoJS.mode.GCM,
+      mode: CryptoJS.mode.CBC,
       padding: CryptoJS.pad.Pkcs7,
     });
 

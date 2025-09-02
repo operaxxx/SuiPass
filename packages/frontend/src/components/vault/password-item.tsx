@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Copy, Eye, EyeOff, Edit, Trash2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -132,7 +132,7 @@ export function PasswordItem({ item, onEdit, onDelete, className }: PasswordItem
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => handleCopy(item.url, 'url')}
+              onClick={() => handleCopy(item.url!, 'url')}
               className="h-8 w-8 relative"
             >
               <Copy className="h-4 w-4" />
