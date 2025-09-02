@@ -1,0 +1,33 @@
+{
+  "name": "suipass-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "sui move build",
+    "test": "sui move test",
+    "deploy": "sui client publish",
+    "devnet:deploy": "sui client publish --skip-dependency-verification",
+    "testnet:deploy": "sui client publish --network testnet",
+    "mainnet:deploy": "sui client publish --network mainnet",
+    "coverage": "sui move coverage",
+    "lint": "sui move clippy",
+    "security:check": "sui move verify && sui move analyze",
+    "docs": "sui move docs",
+    "docs:generate": "sui move docs --output ../../docs/contracts",
+    "test:gas": "sui move test --gas",
+    "benchmark": "sui move benchmark",
+    "verify": "sui move verify",
+    "verify:testnet": "sui move verify --network testnet",
+    "verify:mainnet": "sui move verify --network mainnet",
+    "clean": "sui move clean && rm -rf build",
+    "deploy:testnet": "sui client publish --network testnet",
+    "deploy:mainnet": "sui client publish --network mainnet"
+  },
+  "devDependencies": {
+    "@mysten/sui-move-docs": "^0.1.0",
+    "@mysten/sui": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

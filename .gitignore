@@ -1,0 +1,125 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Production
+/build
+/dist
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vite
+.vite/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+
+# Sui
+.sui/
+
+# Wallet data
+*.wallet
+
+# Encrypted backups
+*.backup
+
+# Logs
+logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Cache directories
+.cache/
+.parcel-cache/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Package manager specific
+.pnpm-store/
+.yarn/
+.yarn-integrity
+
+# Test artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+.nyc_output/
+
+# Walrus specific
+.walrus/
+
+# Build artifacts
+*.tgz
+*.tar.gz
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# OS generated files
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Archives
+*.zip
+*.rar
+*.7z
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Certificate files
+*.crt
+*.key
+*.p12
+*.pfx
+
+# Backup files
+*.bak
+*.backup
+
+# Sui config files
+sui-config.yaml
+
+# Temporary encrypted files
+*.tmp
+*.temp
+
+# Local development
+.local

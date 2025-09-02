@@ -1,0 +1,81 @@
+{
+  "benchmarks": {
+    "frontend": {
+      "load_time": {
+        "target": "< 2s",
+        "critical": "> 5s"
+      },
+      "bundle_size": {
+        "target": "< 300KB",
+        "critical": "> 1MB"
+      },
+      "render_performance": {
+        "target": "> 90",
+        "critical": "< 70"
+      },
+      "api_response": {
+        "target": "< 500ms",
+        "critical": "> 2s"
+      }
+    },
+    "contracts": {
+      "deployment": {
+        "target": "< 30s",
+        "critical": "> 60s"
+      },
+      "execution": {
+        "create_vault": {
+          "target": "< 100000 gas",
+          "critical": "> 200000 gas"
+        },
+        "store_password": {
+          "target": "< 150000 gas",
+          "critical": "> 300000 gas"
+        },
+        "retrieve_password": {
+          "target": "< 80000 gas",
+          "critical": "> 150000 gas"
+        },
+        "delete_password": {
+          "target": "< 50000 gas",
+          "critical": "> 100000 gas"
+        }
+      },
+      "storage": {
+        "walrus_upload": {
+          "target": "< 10s",
+          "critical": "> 30s"
+        },
+        "walrus_download": {
+          "target": "< 5s",
+          "critical": "> 15s"
+        }
+      }
+    },
+    "encryption": {
+      "key_derivation": {
+        "target": "< 1s",
+        "critical": "> 3s"
+      },
+      "encryption_speed": {
+        "target": "> 100MB/s",
+        "critical": "< 50MB/s"
+      },
+      "decryption_speed": {
+        "target": "> 150MB/s",
+        "critical": "< 75MB/s"
+      }
+    }
+  },
+  "thresholds": {
+    "pass": 90,
+    "warning": 75,
+    "fail": 60
+  },
+  "reporting": {
+    "format": "json",
+    "output_dir": "reports/",
+    "include_details": true,
+    "compare_baseline": true
+  }
+}

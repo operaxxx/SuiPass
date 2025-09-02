@@ -1,0 +1,56 @@
+{
+  "name": "suipass-root",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm run --filter frontend dev",
+    "build": "pnpm run --filter frontend build",
+    "test": "pnpm run --filter frontend test",
+    "test:coverage": "pnpm run --filter frontend test:coverage",
+    "test:e2e": "pnpm run --filter frontend test:e2e",
+    "test:e2e:install": "pnpm run --filter frontend test:e2e:install",
+    "test:performance": "pnpm run --filter frontend test:performance",
+    "lint": "pnpm run --filter frontend lint",
+    "type-check": "pnpm run --filter frontend type-check",
+    "contract:test": "cd packages/contracts && pnpm test",
+    "contract:deploy": "cd packages/contracts && pnpm deploy",
+    "contract:coverage": "cd packages/contracts && pnpm coverage",
+    "contract:lint": "cd packages/contracts && pnpm lint",
+    "contract:security": "cd packages/contracts && pnpm security:check",
+    "e2e": "pnpm run --filter frontend test:e2e",
+    "docs:generate": "pnpm run --filter frontend docs:generate && cd packages/contracts && pnpm docs:generate",
+    "prepare": "husky install",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish",
+    "bootstrap": "pnpm install && pnpm run build",
+    "clean": "pnpm -r run clean && pnpm store prune",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "audit": "pnpm audit",
+    "security:check": "pnpm audit --audit-level moderate"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.26.2",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.2.4",
+    "typescript": "^5.3.3"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}

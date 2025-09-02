@@ -1,0 +1,70 @@
+{
+  "security": {
+    "audit": {
+      "level": "moderate",
+      "exclude_dev_dependencies": false
+    },
+    "sui_move": {
+      "checks": [
+        "overflow",
+        "underflow",
+        "reentrancy",
+        "access_control",
+        "data_validation",
+        "front_running"
+      ],
+      "exclude_patterns": [
+        "tests/"
+      ]
+    },
+    "frontend": {
+      "csp": {
+        "default-src": ["'self'"],
+        "script-src": ["'self'", "'unsafe-inline'"],
+        "style-src": ["'self'", "'unsafe-inline'"],
+        "img-src": ["'self'", "data:", "https:"],
+        "connect-src": ["'self'", "https://sui.testnet.rpc", "https://walrus.testnet.rpc"]
+      },
+      "content_security": {
+        "sanitize_inputs": true,
+        "xss_protection": true,
+        "csrf_protection": true
+      }
+    },
+    "encryption": {
+      "algorithm": "AES-256-GCM",
+      "key_derivation": "Argon2id",
+      "min_iterations": 3,
+      "memory_cost": 65536,
+      "parallelism": 4
+    },
+    "storage": {
+      "local": {
+        "indexeddb": true,
+        "encryption_required": true
+      },
+      "walrus": {
+        "encryption_required": true,
+        "integrity_check": true
+      }
+    }
+  },
+  "gas_optimization": {
+    "max_gas_per_function": 1000000,
+    "max_total_gas": 5000000,
+    "optimization_level": 3,
+    "warn_threshold": 800000
+  },
+  "performance": {
+    "frontend": {
+      "max_bundle_size": "500KB",
+      "max_load_time": "3s",
+      "min_performance_score": 90
+    },
+    "contracts": {
+      "max_deployment_cost": "100 SUI",
+      "max_execution_gas": 500000,
+      "min_tps": 1000
+    }
+  }
+}
