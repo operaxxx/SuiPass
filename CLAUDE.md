@@ -167,3 +167,5 @@ VITE_ENABLE_LOCAL_MODE=true
 - All TypeScript strict mode rules are enabled
 - Tailwind CSS is configured with custom design tokens
 - The project supports both local mode and decentralized mode
+
+- 需要编译智能合约时, 进入到 @packages/contracts/ 进行编译
