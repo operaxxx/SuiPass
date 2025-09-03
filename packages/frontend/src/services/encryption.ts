@@ -53,14 +53,20 @@ export async function encryptData(
   const derivedKey = await deriveKey(key, salt);
   const encryptionIV = iv || generateIV();
 
+  // Note: crypto-js doesn't support GCM mode natively
+  // Using CBC with HMAC for authenticated encryption
   const encrypted = CryptoJS.AES.encrypt(data, derivedKey, {
     iv: CryptoJS.enc.Hex.parse(encryptionIV),
-    mode: CryptoJS.mode.GCM,
-    padding: CryptoJS.pad.NoPadding,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7,
   });
+  
+  // Add HMAC for authentication
+  const hmac = CryptoJS.HmacSHA256(encrypted.toString(), derivedKey);
+  const authenticatedData = `${encrypted.toString()}:${hmac.toString()}`;
 
   return {
-    encrypted: encrypted.toString(),
+    encrypted: authenticatedData,
     iv: encryptionIV,
     salt,
   };
@@ -78,10 +84,23 @@ export async function decryptData(
   try {
     const derivedKey = await deriveKey(key, salt);
     
-    const decrypted = CryptoJS.AES.decrypt(encryptedData, derivedKey, {
+    // Split encrypted data and HMAC
+    const [actualEncryptedData, receivedHmac] = encryptedData.split(':');
+    
+    if (!actualEncryptedData || !receivedHmac) {
+      throw new Error('Invalid encrypted data format');
+    }
+    
+    // Verify HMAC
+    const computedHmac = CryptoJS.HmacSHA256(actualEncryptedData, derivedKey);
+    if (computedHmac.toString() !== receivedHmac) {
+      throw new Error('HMAC verification failed - data may be tampered');
+    }
+    
+    const decrypted = CryptoJS.AES.decrypt(actualEncryptedData, derivedKey, {
       iv: CryptoJS.enc.Hex.parse(iv),
-      mode: CryptoJS.mode.GCM,
-      padding: CryptoJS.pad.NoPadding,
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7,
     });
 
     const result = decrypted.toString(CryptoJS.enc.Utf8);
