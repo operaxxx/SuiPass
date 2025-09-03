@@ -14,5 +14,25 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/test/',
+        'src/**/*.test.{ts,tsx}',
+        'src/**/*.spec.{ts,tsx}',
+      ],
+    },
+    mockReset: true,
+    restoreMocks: true,
+    clearMocks: true,
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    exclude: [
+      'node_modules/',
+      'dist/',
+      '.idea/',
+      '.git/',
+      '.cache/',
+    ],
   },
 });
