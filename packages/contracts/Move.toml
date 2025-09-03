@@ -3,6 +3,7 @@
 [package]
 name = "suipass"
 version = "0.0.1"
+edition = "2024"
 
 [addresses]
 suipass = "0x0"
@@ -10,6 +11,6 @@ std = "0x1"
 sui = "0x2"
 
 [dependencies]
-Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/mainnet" }
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
 
 [dev-dependencies]
