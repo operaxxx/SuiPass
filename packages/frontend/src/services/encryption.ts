@@ -3,7 +3,7 @@ import * as CryptoJS from 'crypto-js';
 // Encryption configuration
 const ENCRYPTION_CONFIG = {
   keySize: 256,
-  iterations: 100000,
+  iterations: 600000,
   hashAlgorithm: 'sha256',
 } as const;
 
@@ -55,8 +55,8 @@ export async function encryptData(
 
   const encrypted = CryptoJS.AES.encrypt(data, derivedKey, {
     iv: CryptoJS.enc.Hex.parse(encryptionIV),
-    mode: CryptoJS.mode.CBC,
-    padding: CryptoJS.pad.Pkcs7,
+    mode: CryptoJS.mode.GCM,
+    padding: CryptoJS.pad.NoPadding,
   });
 
   return {
@@ -80,8 +80,8 @@ export async function decryptData(
     
     const decrypted = CryptoJS.AES.decrypt(encryptedData, derivedKey, {
       iv: CryptoJS.enc.Hex.parse(iv),
-      mode: CryptoJS.mode.CBC,
-      padding: CryptoJS.pad.Pkcs7,
+      mode: CryptoJS.mode.GCM,
+      padding: CryptoJS.pad.NoPadding,
     });
 
     const result = decrypted.toString(CryptoJS.enc.Utf8);
