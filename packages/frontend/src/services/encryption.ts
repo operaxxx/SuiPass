@@ -1,4 +1,4 @@
-import CryptoJS from 'crypto-js';
+import * as CryptoJS from 'crypto-js';
 
 // Encryption configuration
 const ENCRYPTION_CONFIG = {

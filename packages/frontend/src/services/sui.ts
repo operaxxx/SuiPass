@@ -23,6 +23,8 @@ export class SuiService {
   private client: SuiClient;
   private keypair: any = null;
   private currentAddress: string | null = null;
+  private walletAdapter: any = null;
+  private network: string = 'testnet';
 
   constructor() {
     // Mock Sui client for development
@@ -66,15 +68,52 @@ export class SuiService {
     };
   }
 
-  async connectWallet(): Promise<void> {
-    // Mock wallet connection for development
-    this.keypair = MockEd25519Keypair.generate();
-    this.currentAddress = this.keypair.getPublicKey().toSuiAddress();
+  async connectWallet(walletAdapter?: any): Promise<void> {
+    if (walletAdapter) {
+      this.walletAdapter = walletAdapter;
+      await walletAdapter.connect();
+      this.currentAddress = walletAdapter.address;
+    } else {
+      // Mock wallet connection for development
+      this.keypair = MockEd25519Keypair.generate();
+      this.currentAddress = this.keypair.getPublicKey().toSuiAddress();
+    }
   }
 
   async disconnectWallet(): Promise<void> {
+    if (this.walletAdapter) {
+      await this.walletAdapter.disconnect();
+      this.walletAdapter = null;
+    }
     this.currentAddress = null;
     this.keypair = null;
+  }
+
+  // New methods required by tests
+  getNetwork(): string {
+    return this.network;
+  }
+
+  getRpcUrl(): string {
+    const urls: Record<string, string> = {
+      testnet: 'https://sui.testnet.rpc',
+      mainnet: 'https://sui.mainnet.rpc',
+      devnet: 'https://fullnode.devnet.sui.io:443',
+      localnet: 'http://127.0.0.1:9000'
+    };
+    return urls[this.network] || urls.testnet;
+  }
+
+  isWalletConnected(): boolean {
+    return this.currentAddress !== null;
+  }
+
+  getNetworkStatus(): { connected: boolean; network: string; address?: string } {
+    return {
+      connected: this.isWalletConnected(),
+      network: this.getNetwork(),
+      address: this.currentAddress || undefined
+    };
   }
 
   async getCurrentAddress(): Promise<string> {

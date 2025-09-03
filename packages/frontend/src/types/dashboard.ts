@@ -1,3 +1,5 @@
+import { VaultItem } from '../types';
+
 // Type definitions for dashboard components
 export interface DashboardStats {
   totalItems: number;

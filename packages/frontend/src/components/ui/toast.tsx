@@ -110,9 +110,13 @@ interface UseToastReturn {
 export function useToast(): UseToastReturn {
   const [toasts, setToasts] = React.useState<ToastProps[]>([]);
 
-  const addToast = (toast: Omit<ToastProps, 'id'>) => {
+  const addToast = (toast: Omit<ToastProps, 'id' | 'onClose'>) => {
     const id = Math.random().toString(36).substr(2, 9);
-    const newToast = { ...toast, id };
+    const newToast = { 
+      ...toast, 
+      id,
+      onClose: (toastId: string) => removeToast(toastId)
+    };
     
     setToasts((prev) => [...prev, newToast]);
     return id;

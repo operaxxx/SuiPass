@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { WalletConnectButton } from '@suiet/wallet-kit';
+import { ConnectButton } from '@suiet/wallet-kit';
 import { useAuthStore } from '../../stores/auth';
-import { suiService } from '../../services/sui';
 
 interface WalletConnectProps {
   className?: string;
@@ -23,6 +22,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({ className = '' }) 
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   // Initialize network status check
   useEffect(() => {
@@ -53,11 +53,14 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({ className = '' }) 
   };
 
   const handleDisconnect = async () => {
+    setIsDisconnecting(true);
     try {
       await disconnectWallet();
       setShowDropdown(false);
     } catch (error) {
       console.error('Failed to disconnect:', error);
+    } finally {
+      setIsDisconnecting(false);
     }
   };
 
@@ -186,7 +189,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({ className = '' }) 
 
   return (
     <div className={className}>
-      <WalletConnectButton
+      <ConnectButton
         className="!bg-blue-600 !text-white !px-4 !py-2 !rounded-lg !hover:bg-blue-700 !focus:outline-none !focus:ring-2 !focus:ring-blue-500 !font-medium !text-sm !shadow-sm !transition-colors"
         onConnect={async (wallet) => {
           try {
@@ -197,7 +200,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({ className = '' }) 
         }}
       >
         Connect Wallet
-      </WalletConnectButton>
+      </ConnectButton>
     </div>
   );
 };
