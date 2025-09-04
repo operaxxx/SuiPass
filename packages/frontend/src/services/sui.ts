@@ -1,17 +1,9 @@
 // Sui区块链服务实现
 // packages/frontend/src/services/sui.ts
 
-import { 
-  SuiClient, 
-  getFullnodeUrl,
-  Transaction,
-} from '@mysten/sui.js';
+import { SuiClient, getFullnodeUrl, Transaction } from '@mysten/sui.js';
 import { WalletAdapter } from '@suiet/wallet-kit';
-import type {
-  VaultInfo,
-  VaultEvent,
-  NetworkInfo,
-} from '@/types/sui';
+import type { VaultInfo, VaultEvent, NetworkInfo } from '@/types/sui';
 
 export class SuiService {
   private client: SuiClient;
@@ -20,7 +12,8 @@ export class SuiService {
   private network: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
 
   constructor() {
-    this.network = (process.env.VITE_SUI_NETWORK as 'mainnet' | 'testnet' | 'devnet' | 'localnet') || 'testnet';
+    this.network =
+      (process.env.VITE_SUI_NETWORK as 'mainnet' | 'testnet' | 'devnet' | 'localnet') || 'testnet';
     this.client = new SuiClient({
       url: getFullnodeUrl(this.network),
     });
@@ -48,7 +41,7 @@ export class SuiService {
 
     try {
       const tx = new Transaction();
-      
+
       // 调用智能合约创建保险库
       tx.moveCall({
         target: `${this.packageId}::suipass_main::create_suipass_vault`,
@@ -97,23 +90,17 @@ export class SuiService {
   /**
    * 更新保险库数据
    */
-  async updateVault(
-    vaultId: string,
-    newBlobId: string
-  ): Promise<{ txDigest: string }> {
+  async updateVault(vaultId: string, newBlobId: string): Promise<{ txDigest: string }> {
     if (!this.wallet) {
       throw new Error('Wallet not connected');
     }
 
     try {
       const tx = new Transaction();
-      
+
       tx.moveCall({
         target: `${this.packageId}::suipass_main::update_vault_data`,
-        arguments: [
-          tx.object(vaultId),
-          tx.pure.string(newBlobId),
-        ],
+        arguments: [tx.object(vaultId), tx.pure.string(newBlobId)],
         typeArguments: [],
       });
 
@@ -152,15 +139,15 @@ export class SuiService {
 
     try {
       const tx = new Transaction();
-      
+
       tx.moveCall({
         target: `${this.packageId}::suipass_main::share_vault_access`,
         arguments: [
           tx.object(vaultId),
           tx.pure.address(grantedTo),
-          tx.pure.u64( permissions),
-          tx.pure.u64( expiresAt),
-          tx.pure.u64( maxUsage),
+          tx.pure.u64(permissions),
+          tx.pure.u64(expiresAt),
+          tx.pure.u64(maxUsage),
           tx.pure.vector('string', []), // conditions
         ],
         typeArguments: [],
@@ -179,7 +166,8 @@ export class SuiService {
       // 从交易结果中提取权限对象ID
       const effects = result.effects as any;
       const capabilityObject = effects.objectChanges?.created?.find(
-        (obj: any) => obj.objectType === `${this.packageId}::permission_manager::PermissionCapability`
+        (obj: any) =>
+          obj.objectType === `${this.packageId}::permission_manager::PermissionCapability`
       );
 
       if (!capabilityObject) {
@@ -199,21 +187,17 @@ export class SuiService {
   /**
    * 撤销访问权限
    */
-  async revokeAccess(
-    capabilityId: string
-  ): Promise<{ txDigest: string }> {
+  async revokeAccess(capabilityId: string): Promise<{ txDigest: string }> {
     if (!this.wallet) {
       throw new Error('Wallet not connected');
     }
 
     try {
       const tx = new Transaction();
-      
+
       tx.moveCall({
         target: `${this.packageId}::permission_manager::revoke_capability`,
-        arguments: [
-          tx.object(capabilityId),
-        ],
+        arguments: [tx.object(capabilityId)],
         typeArguments: [],
       });
 
@@ -465,7 +449,7 @@ export class SuiService {
     try {
       const checkpoint = await this.client.getLatestCheckpointSequenceNumber();
       const protocol = await this.client.getProtocolConfig();
-      
+
       return {
         network: this.network,
         checkpoint,
@@ -496,7 +480,7 @@ export class SuiService {
             name: parsedJson.name,
             timestamp: parsedJson.timestamp,
           };
-        
+
         case `${this.packageId}::vault_core::VaultUpdated`:
           return {
             type: 'updated',
@@ -506,7 +490,7 @@ export class SuiService {
             version: parsedJson.version,
             timestamp: parsedJson.timestamp,
           };
-        
+
         default:
           return null;
       }

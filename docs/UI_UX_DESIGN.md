@@ -3,9 +3,11 @@
 ## 📋 设计概览
 
 ### 项目背景
+
 SuiPass 是一个基于 Sui 区块链和 Walrus 存储的去中心化密码管理器，为黑客松演示而设计。本文档提供了完整的 UI/UX 设计规范和实施指南。
 
 ### 设计目标
+
 - **技术展示**：突出 Sui + Walrus 集成的技术创新
 - **用户体验**：提供流畅、直观的密码管理体验
 - **演示优化**：为黑客松评委提供清晰的技术亮点展示
@@ -16,6 +18,7 @@ SuiPass 是一个基于 Sui 区块链和 Walrus 存储的去中心化密码管�
 ### 色彩系统
 
 #### 主色调（基于 Sui 品牌）
+
 ```css
 :root {
   /* Sui 主色系 */
@@ -24,28 +27,28 @@ SuiPass 是一个基于 Sui 区块链和 Walrus 存储的去中心化密码管�
   --sui-primary-200: #bae6fd;
   --sui-primary-300: #7dd3fc;
   --sui-primary-400: #38bdf8;
-  --sui-primary-500: #0ea5e9;  /* 主品牌色 */
+  --sui-primary-500: #0ea5e9; /* 主品牌色 */
   --sui-primary-600: #0284c7;
   --sui-primary-700: #0369a1;
   --sui-primary-800: #075985;
   --sui-primary-900: #0c4a6e;
-  
+
   /* 语义化色彩 */
   --success-50: #f0fdf4;
   --success-500: #10b981;
   --success-600: #059669;
   --success-700: #047857;
-  
+
   --warning-50: #fffbeb;
   --warning-500: #f59e0b;
   --warning-600: #d97706;
   --warning-700: #b45309;
-  
+
   --error-50: #fef2f2;
   --error-500: #ef4444;
   --error-600: #dc2626;
   --error-700: #b91c1c;
-  
+
   --info-50: #eff6ff;
   --info-500: #3b82f6;
   --info-600: #2563eb;
@@ -54,6 +57,7 @@ SuiPass 是一个基于 Sui 区块链和 Walrus 存储的去中心化密码管�
 ```
 
 #### 深色模式适配
+
 ```css
 [data-theme="dark"] {
   --bg-primary: #0f172a;
@@ -68,29 +72,36 @@ SuiPass 是一个基于 Sui 区块链和 Walrus 存储的去中心化密码管�
 ### 字体系统
 
 #### 字体家族
+
 ```css
-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+font-family:
+  "Inter",
+  -apple-system,
+  BlinkMacSystemFont,
+  "Segoe UI",
+  sans-serif;
 font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 ```
 
 #### 排版尺度
+
 ```css
 :root {
   /* 字体大小 */
-  --text-xs: 0.75rem;     /* 12px - 辅助信息 */
-  --text-sm: 0.875rem;    /* 14px - 表单标签 */
-  --text-base: 1rem;      /* 16px - 正文 */
-  --text-lg: 1.125rem;    /* 18px - 标题 */
-  --text-xl: 1.25rem;     /* 20px - 小标题 */
-  --text-2xl: 1.5rem;     /* 24px - 页面标题 */
-  --text-3xl: 1.875rem;   /* 30px - 大标题 */
-  --text-4xl: 2.25rem;    /* 36px - 特大标题 */
-  
+  --text-xs: 0.75rem; /* 12px - 辅助信息 */
+  --text-sm: 0.875rem; /* 14px - 表单标签 */
+  --text-base: 1rem; /* 16px - 正文 */
+  --text-lg: 1.125rem; /* 18px - 标题 */
+  --text-xl: 1.25rem; /* 20px - 小标题 */
+  --text-2xl: 1.5rem; /* 24px - 页面标题 */
+  --text-3xl: 1.875rem; /* 30px - 大标题 */
+  --text-4xl: 2.25rem; /* 36px - 特大标题 */
+
   /* 行高 */
   --leading-tight: 1.25;
   --leading-normal: 1.5;
   --leading-relaxed: 1.75;
-  
+
   /* 字重 */
   --font-light: 300;
   --font-normal: 400;
@@ -104,14 +115,14 @@ font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 
 ```css
 :root {
-  --spacing-xs: 0.25rem;  /* 4px */
-  --spacing-sm: 0.5rem;   /* 8px */
-  --spacing-md: 0.75rem;  /* 12px */
-  --spacing-lg: 1rem;     /* 16px */
-  --spacing-xl: 1.5rem;   /* 24px */
-  --spacing-2xl: 2rem;    /* 32px */
-  --spacing-3xl: 3rem;    /* 48px */
-  --spacing-4xl: 4rem;    /* 64px */
+  --spacing-xs: 0.25rem; /* 4px */
+  --spacing-sm: 0.5rem; /* 8px */
+  --spacing-md: 0.75rem; /* 12px */
+  --spacing-lg: 1rem; /* 16px */
+  --spacing-xl: 1.5rem; /* 24px */
+  --spacing-2xl: 2rem; /* 32px */
+  --spacing-3xl: 3rem; /* 48px */
+  --spacing-4xl: 4rem; /* 64px */
 }
 ```
 
@@ -120,13 +131,13 @@ font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 ```css
 :root {
   /* 圆角 */
-  --radius-sm: 0.375rem;  /* 6px */
-  --radius-md: 0.5rem;    /* 8px */
-  --radius-lg: 0.75rem;   /* 12px */
-  --radius-xl: 1rem;      /* 16px */
-  --radius-2xl: 1.5rem;   /* 24px */
-  --radius-full: 9999px;  /* 完全圆形 */
-  
+  --radius-sm: 0.375rem; /* 6px */
+  --radius-md: 0.5rem; /* 8px */
+  --radius-lg: 0.75rem; /* 12px */
+  --radius-xl: 1rem; /* 16px */
+  --radius-2xl: 1.5rem; /* 24px */
+  --radius-full: 9999px; /* 完全圆形 */
+
   /* 阴影 */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
@@ -141,6 +152,7 @@ font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 ### 按钮组件
 
 #### 基础按钮
+
 ```typescript
 // components/Button.tsx
 import React from 'react';
@@ -202,6 +214,7 @@ export { Button, buttonVariants };
 ```
 
 #### 使用示例
+
 ```typescript
 // 基础用法
 <Button>添加密码</Button>
@@ -226,6 +239,7 @@ export { Button, buttonVariants };
 ### 输入框组件
 
 #### 基础输入框
+
 ```typescript
 // components/Input.tsx
 import React from 'react';
@@ -289,6 +303,7 @@ export { Input };
 ```
 
 #### 密码输入框
+
 ```typescript
 // components/PasswordInput.tsx
 import React, { useState } from 'react';
@@ -365,6 +380,7 @@ export { PasswordInput };
 ### 卡片组件
 
 #### 密码卡片
+
 ```typescript
 // components/PasswordCard.tsx
 import React from 'react';
@@ -492,6 +508,7 @@ export { PasswordCard };
 ```
 
 #### 保险库卡片
+
 ```typescript
 // components/VaultCard.tsx
 import React from 'react';
@@ -596,6 +613,7 @@ export { VaultCard };
 ### 主页面（Dashboard）
 
 #### 布局结构
+
 ```typescript
 // pages/Dashboard.tsx
 import React from 'react';
@@ -752,6 +770,7 @@ export default Dashboard;
 ```
 
 #### 统计卡片组件
+
 ```typescript
 // components/StatsCard.tsx
 import React from 'react';
@@ -827,6 +846,7 @@ export { StatsCard };
 ### 保险库详情页
 
 #### 布局结构
+
 ```typescript
 // pages/VaultDetail.tsx
 import React from 'react';
@@ -892,7 +912,7 @@ const VaultDetail: React.FC = () => {
                 leftIcon={<Search className="w-4 h-4" />}
               />
             </div>
-            
+
             {/* 文件夹筛选 */}
             <div className="flex items-center space-x-2">
               <Button
@@ -924,7 +944,7 @@ const VaultDetail: React.FC = () => {
                 笔记
               </Button>
             </div>
-            
+
             {/* 视图切换 */}
             <ViewToggle
               mode={viewMode}
@@ -951,7 +971,7 @@ const VaultDetail: React.FC = () => {
           </div>
         ) : (
           <div className={
-            viewMode === 'grid' 
+            viewMode === 'grid'
               ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
               : 'space-y-4'
           }>
@@ -982,6 +1002,7 @@ export default VaultDetail;
 ### 密码编辑页
 
 #### 表单布局
+
 ```typescript
 // pages/PasswordEdit.tsx
 import React from 'react';
@@ -1001,14 +1022,14 @@ const PasswordEdit: React.FC = () => {
     tags: [] as string[],
     folder: 'personal',
   });
-  
+
   const [showGenerator, setShowGenerator] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       // 保存密码逻辑
       await savePassword(formData);
@@ -1062,7 +1083,7 @@ const PasswordEdit: React.FC = () => {
           {/* 基本信息 */}
           <div className="bg-card rounded-lg border p-6 space-y-6">
             <h2 className="text-lg font-semibold">基本信息</h2>
-            
+
             <Input
               label="标题 *"
               placeholder="例如：Google 账户"
@@ -1071,7 +1092,7 @@ const PasswordEdit: React.FC = () => {
               leftIcon={<Key className="w-4 h-4" />}
               required
             />
-            
+
             <Input
               label="用户名"
               placeholder="用户名或邮箱"
@@ -1079,7 +1100,7 @@ const PasswordEdit: React.FC = () => {
               onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
               leftIcon={<User className="w-4 h-4" />}
             />
-            
+
             <PasswordInput
               label="密码 *"
               placeholder="输入密码"
@@ -1088,7 +1109,7 @@ const PasswordEdit: React.FC = () => {
               showStrength
               required
             />
-            
+
             <div className="flex space-x-3">
               <Button
                 type="button"
@@ -1108,14 +1129,14 @@ const PasswordEdit: React.FC = () => {
                 清除
               </Button>
             </div>
-            
+
             {showGenerator && (
               <PasswordGenerator
                 onGenerated={handleGeneratedPassword}
                 onClose={() => setShowGenerator(false)}
               />
             )}
-            
+
             <Input
               label="网址"
               placeholder="https://example.com"
@@ -1129,7 +1150,7 @@ const PasswordEdit: React.FC = () => {
           {/* 附加信息 */}
           <div className="bg-card rounded-lg border p-6 space-y-6">
             <h2 className="text-lg font-semibold">附加信息</h2>
-            
+
             <div>
               <label className="text-sm font-medium text-foreground block mb-2">
                 备注
@@ -1142,7 +1163,7 @@ const PasswordEdit: React.FC = () => {
                 rows={4}
               />
             </div>
-            
+
             <div>
               <label className="text-sm font-medium text-foreground block mb-2">
                 文件夹
@@ -1163,7 +1184,7 @@ const PasswordEdit: React.FC = () => {
           {/* 安全设置 */}
           <div className="bg-card rounded-lg border p-6 space-y-6">
             <h2 className="text-lg font-semibold">安全设置</h2>
-            
+
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -1177,7 +1198,7 @@ const PasswordEdit: React.FC = () => {
                   className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-medium">自动填充</h3>
@@ -1205,6 +1226,7 @@ export default PasswordEdit;
 ## 🎭 动画和交互设计
 
 ### 加载状态动画
+
 ```typescript
 // components/LoadingSpinner.tsx
 import React from 'react';
@@ -1214,9 +1236,9 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
-  size = 'md', 
-  className = '' 
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
+  size = 'md',
+  className = ''
 }) => {
   const sizeClasses = {
     sm: 'w-4 h-4',
@@ -1233,6 +1255,7 @@ export { LoadingSpinner };
 ```
 
 ### 骨架屏组件
+
 ```typescript
 // components/Skeleton.tsx
 import React from 'react';
@@ -1263,6 +1286,7 @@ export { Skeleton };
 ```
 
 ### 过渡动画
+
 ```typescript
 // components/Transition.tsx
 import React from 'react';
@@ -1308,6 +1332,7 @@ export { Transition };
 ## 🎨 演示模式设计
 
 ### 演示模式组件
+
 ```typescript
 // components/DemoMode.tsx
 import React from 'react';
@@ -1333,7 +1358,7 @@ const DemoMode: React.FC<DemoModeProps> = ({ steps, onComplete }) => {
 
   React.useEffect(() => {
     let timer: NodeJS.Timeout;
-    
+
     if (isPlaying && currentStep < steps.length) {
       timer = setInterval(() => {
         setProgress(prev => {
@@ -1411,7 +1436,7 @@ const DemoMode: React.FC<DemoModeProps> = ({ steps, onComplete }) => {
             <h2 className="text-2xl font-bold mb-2">{currentStepData.title}</h2>
             <p className="text-muted-foreground">{currentStepData.description}</p>
           </div>
-          
+
           {/* 演示区域 */}
           <div className="bg-secondary/30 rounded-lg p-8 min-h-[400px] flex items-center justify-center">
             {React.cloneElement(currentStepData.action() as React.ReactElement, {
@@ -1428,6 +1453,7 @@ export { DemoMode };
 ```
 
 ### 技术亮点可视化
+
 ```typescript
 // components/TechnicalHighlight.tsx
 import React from 'react';
@@ -1490,6 +1516,7 @@ export { TechnicalHighlight };
 ## 📱 响应式设计
 
 ### 断点系统
+
 ```typescript
 // utils/breakpoints.ts
 export const breakpoints = {
@@ -1498,35 +1525,35 @@ export const breakpoints = {
   md: 768,
   lg: 1024,
   xl: 1280,
-  '2xl': 1536,
+  "2xl": 1536,
 } as const;
 
 export type Breakpoint = keyof typeof breakpoints;
 
 export const useBreakpoint = (): Breakpoint => {
-  const [breakpoint, setBreakpoint] = React.useState<Breakpoint>('xs');
+  const [breakpoint, setBreakpoint] = React.useState<Breakpoint>("xs");
 
   React.useEffect(() => {
     const updateBreakpoint = () => {
       const width = window.innerWidth;
-      if (width >= breakpoints['2xl']) {
-        setBreakpoint('2xl');
+      if (width >= breakpoints["2xl"]) {
+        setBreakpoint("2xl");
       } else if (width >= breakpoints.xl) {
-        setBreakpoint('xl');
+        setBreakpoint("xl");
       } else if (width >= breakpoints.lg) {
-        setBreakpoint('lg');
+        setBreakpoint("lg");
       } else if (width >= breakpoints.md) {
-        setBreakpoint('md');
+        setBreakpoint("md");
       } else if (width >= breakpoints.sm) {
-        setBreakpoint('sm');
+        setBreakpoint("sm");
       } else {
-        setBreakpoint('xs');
+        setBreakpoint("xs");
       }
     };
 
     updateBreakpoint();
-    window.addEventListener('resize', updateBreakpoint);
-    return () => window.removeEventListener('resize', updateBreakpoint);
+    window.addEventListener("resize", updateBreakpoint);
+    return () => window.removeEventListener("resize", updateBreakpoint);
   }, []);
 
   return breakpoint;
@@ -1534,6 +1561,7 @@ export const useBreakpoint = (): Breakpoint => {
 ```
 
 ### 响应式网格
+
 ```typescript
 // components/ResponsiveGrid.tsx
 import React from 'react';
@@ -1558,11 +1586,11 @@ const ResponsiveGrid: React.FC<ResponsiveGridProps> = ({
   gap = 4,
 }) => {
   const breakpoint = useBreakpoint();
-  
+
   const gridCols = cols[breakpoint] || cols.xs || 1;
-  
+
   return (
-    <div 
+    <div
       className={`grid gap-${gap}`}
       style={{
         gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
@@ -1579,6 +1607,7 @@ export { ResponsiveGrid };
 ## 🎯 实施建议
 
 ### 开发优先级
+
 1. **Week 1**: 核心组件系统（按钮、输入框、卡片）
 2. **Week 2**: 页面布局和基础样式
 3. **Week 3**: 交互逻辑和状态管理
@@ -1587,12 +1616,14 @@ export { ResponsiveGrid };
 6. **Week 6**: 最终完善和演示准备
 
 ### 质量保证
+
 - **组件测试**: 每个组件都需要单元测试
 - **样式测试**: 确保跨浏览器一致性
 - **性能测试**: 组件渲染性能优化
 - **可访问性测试**: WCAG 2.1 AA 标准符合性
 
 ### 维护和扩展
+
 - **设计令牌**: 集中管理样式变量
 - **组件文档**: 详细的使用说明和示例
 - **版本控制**: 语义化版本管理

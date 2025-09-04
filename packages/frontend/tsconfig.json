@@ -67,12 +67,7 @@
       "@/utils/*": ["./src/utils/*"]
     }
   },
-  "include": [
-    "src",
-    "vite.config.ts",
-    "vitest.config.ts",
-    "playwright.config.ts"
-  ],
+  "include": ["src", "vitest.config.ts", "playwright.config.ts"],
   "exclude": [
     "node_modules",
     "dist",
@@ -83,7 +78,5 @@
     "**/*.test.tsx",
     "**/*.spec.tsx"
   ],
-  "references": [
-    { "path": "./tsconfig.node.json" }
-  ]
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

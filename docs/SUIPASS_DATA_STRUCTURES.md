@@ -21,23 +21,23 @@ graph TB
     A --> C[permission_manager]
     A --> D[storage_manager]
     A --> E[audit_system]
-    
+
     B --> F[Vault 核心结构]
     B --> G[VaultSettings]
     B --> H[事件系统]
-    
+
     C --> I[PermissionCapability]
     C --> J[权限验证]
     C --> K[权限管理]
-    
+
     D --> L[StorageReference]
     D --> M[EncryptionInfo]
     D --> N[成本跟踪]
-    
+
     E --> O[AuditLog]
     E --> P[VaultStats]
     E --> Q[安全评分]
-    
+
     F --> R[Walrus 存储]
     L --> R
     I --> S[前端应用]
@@ -46,13 +46,13 @@ graph TB
 
 ### 模块职责分工
 
-| 模块 | 职责 | 核心功能 |
-|------|------|----------|
-| `vault_core` | 保险库核心管理 | 创建、更新、删除、版本控制 |
-| `permission_manager` | 权限管理 | 权限授予、验证、撤销 |
-| `storage_manager` | 存储管理 | Walrus集成、成本跟踪 |
-| `audit_system` | 审计系统 | 操作日志、统计分析 |
-| `suipass_main` | 统一入口 | 协调各模块、提供API |
+| 模块                 | 职责           | 核心功能                   |
+| -------------------- | -------------- | -------------------------- |
+| `vault_core`         | 保险库核心管理 | 创建、更新、删除、版本控制 |
+| `permission_manager` | 权限管理       | 权限授予、验证、撤销       |
+| `storage_manager`    | 存储管理       | Walrus集成、成本跟踪       |
+| `audit_system`       | 审计系统       | 操作日志、统计分析         |
+| `suipass_main`       | 统一入口       | 协调各模块、提供API        |
 
 ## 📊 核心数据结构
 
@@ -77,7 +77,7 @@ classDiagram
         +rollback_vault()
         +vault_info()
     }
-    
+
     class VaultSettings {
         +auto_lock_timeout: u64
         +max_items: u64
@@ -85,7 +85,7 @@ classDiagram
         +require_2fa: bool
         +backup_enabled: bool
     }
-    
+
     Vault --> VaultSettings
 ```
 
@@ -99,7 +99,7 @@ module suipass::vault_core {
     use sui::clock::{Self, Clock};
     use sui::event;
     use std::string::String;
-    
+
     /// Vault 核心结构 - 极简设计，仅存储关键元数据
     public struct Vault has key {
         id: UID,
@@ -112,7 +112,7 @@ module suipass::vault_core {
         updated_at: u64,               // 更新时间戳
         settings: VaultSettings,        // 保险库设置
     }
-    
+
     /// 保险库设置 - 支持个性化配置
     public struct VaultSettings has store, drop {
         auto_lock_timeout: u64,        // 自动锁定超时 (秒)
@@ -121,7 +121,7 @@ module suipass::vault_core {
         require_2fa: bool,             // 是否需要二次验证
         backup_enabled: bool,          // 是否启用备份
     }
-    
+
     /// Vault 创建事件
     public struct VaultCreated has copy, drop {
         vault_id: ID,
@@ -130,7 +130,7 @@ module suipass::vault_core {
         walrus_blob_id: String,
         timestamp: u64,
     }
-    
+
     /// 创建新的 Vault
     public fun create_vault(
         name: String,
@@ -151,7 +151,7 @@ module suipass::vault_core {
             updated_at: timestamp,
             settings,
         };
-        
+
         event::emit(VaultCreated {
             vault_id: object::id(&vault),
             owner: vault.owner,
@@ -159,11 +159,11 @@ module suipass::vault_core {
             walrus_blob_id: vault.walrus_blob_id,
             timestamp,
         });
-        
+
         transfer::transfer(vault, tx_context::sender(ctx));
         vault
     }
-    
+
     /// 更新 Vault 的 Walrus blob 引用
     public fun update_vault_blob(
         vault: &mut Vault,
@@ -172,14 +172,14 @@ module suipass::vault_core {
         ctx: &mut TxContext
     ) {
         assert!(vault.owner == tx_context::sender(ctx), 0); // 权限检查
-        
+
         let old_blob_id = vault.walrus_blob_id;
         vault.previous_blob_id = old_blob_id;
         vault.walrus_blob_id = new_blob_id;
         vault.version = vault.version + 1;
         vault.updated_at = clock::timestamp_ms(clock) / 1000;
     }
-    
+
     /// 回滚到上一个版本
     public fun rollback_vault(
         vault: &mut Vault,
@@ -188,14 +188,14 @@ module suipass::vault_core {
     ) {
         assert!(vault.owner == tx_context::sender(ctx), 0);
         assert!(!std::string::is_empty(&vault.previous_blob_id), 1);
-        
+
         let old_blob_id = vault.walrus_blob_id;
         vault.walrus_blob_id = vault.previous_blob_id;
         vault.previous_blob_id = old_blob_id;
         vault.version = vault.version + 1;
         vault.updated_at = clock::timestamp_ms(clock) / 1000;
     }
-    
+
     /// 创建默认 Vault 设置
     public fun default_settings(): VaultSettings {
         VaultSettings {
@@ -232,7 +232,7 @@ classDiagram
         +revoke_permission()
         +has_permission()
     }
-    
+
     class PermissionConstants {
         <<constants>>
         +PERMISSION_VIEW: u64 = 1
@@ -241,7 +241,7 @@ classDiagram
         +PERMISSION_DELETE: u64 = 8
         +PERMISSION_ADMIN: u64 = 16
     }
-    
+
     PermissionCapability --> PermissionConstants
 ```
 
@@ -256,14 +256,14 @@ module suipass::permission_manager {
     use sui::event;
     use std::string::String;
     use std::vector;
-    
+
     /// 权限级别定义 (位掩码)
     const PERMISSION_VIEW: u64 = 1;      // 查看权限
     const PERMISSION_EDIT: u64 = 2;      // 编辑权限
     const PERMISSION_SHARE: u64 = 4;     // 分享权限
     const PERMISSION_DELETE: u64 = 8;    // 删除权限
     const PERMISSION_ADMIN: u64 = 16;    // 管理员权限
-    
+
     /// 权限能力对象
     public struct PermissionCapability has key {
         id: UID,
@@ -278,7 +278,7 @@ module suipass::permission_manager {
         created_at: u64,                 // 创建时间
         is_active: bool,                 // 是否激活
     }
-    
+
     /// 创建权限能力
     public fun create_permission(
         vault_id: ID,
@@ -291,7 +291,7 @@ module suipass::permission_manager {
         ctx: &mut TxContext
     ): PermissionCapability {
         let timestamp = clock::timestamp_ms(clock) / 1000;
-        
+
         let capability = PermissionCapability {
             id: object::new(ctx),
             vault_id,
@@ -305,11 +305,11 @@ module suipass::permission_manager {
             created_at: timestamp,
             is_active: true,
         };
-        
+
         transfer::transfer(capability, granted_to);
         capability
     }
-    
+
     /// 使用权限
     public fun use_permission(
         capability: &mut PermissionCapability,
@@ -320,17 +320,17 @@ module suipass::permission_manager {
     ) {
         let current_time = clock::timestamp_ms(clock) / 1000;
         let user = tx_context::sender(ctx);
-        
+
         // 验证权限
         assert!(capability.is_active, 0);
         assert!(capability.granted_to == user, 1);
         assert!(has_permission(capability, required_permission), 2);
         assert!(current_time <= capability.expires_at, 3);
         assert!(capability.usage_count < capability.max_usage, 4);
-        
+
         capability.usage_count = capability.usage_count + 1;
     }
-    
+
     /// 检查是否有特定权限
     public fun has_permission(
         capability: &PermissionCapability,
@@ -338,7 +338,7 @@ module suipass::permission_manager {
     ): bool {
         (capability.permissions & required_permission) == required_permission
     }
-    
+
     /// 获取剩余使用次数
     public fun remaining_usage(capability: &PermissionCapability): u64 {
         if (capability.usage_count >= capability.max_usage) {
@@ -372,14 +372,14 @@ classDiagram
         +update_storage_reference()
         +verify_data_integrity()
     }
-    
+
     class EncryptionInfo {
         +algorithm: String
         +key_id: String
         +iv: String
         +version: u64
     }
-    
+
     StorageReference --> EncryptionInfo
 ```
 
@@ -393,7 +393,7 @@ module suipass::storage_manager {
     use sui::event;
     use std::string::String;
     use std::vector;
-    
+
     /// 存储引用对象
     public struct StorageReference has key {
         id: UID,
@@ -408,7 +408,7 @@ module suipass::storage_manager {
         is_compressed: bool,            // 是否压缩
         compression_ratio: u64,          // 压缩比例 (百分比)
     }
-    
+
     /// 加密信息
     public struct EncryptionInfo has store, drop {
         algorithm: String,               // 加密算法
@@ -416,7 +416,7 @@ module suipass::storage_manager {
         iv: String,                     // 初始化向量
         version: u64,                   // 加密版本
     }
-    
+
     /// 创建存储引用
     public fun create_storage_reference(
         vault_id: ID,
@@ -432,7 +432,7 @@ module suipass::storage_manager {
         ctx: &mut TxContext
     ): StorageReference {
         let timestamp = clock::timestamp_ms(clock) / 1000;
-        
+
         StorageReference {
             id: object::new(ctx),
             vault_id,
@@ -447,7 +447,7 @@ module suipass::storage_manager {
             compression_ratio,
         }
     }
-    
+
     /// 创建加密信息
     public fun create_encryption_info(
         algorithm: String,
@@ -462,7 +462,7 @@ module suipass::storage_manager {
             version,
         }
     }
-    
+
     /// 验证数据完整性 (通过哈希)
     public fun verify_data_integrity(
         storage_ref: &StorageReference,
@@ -470,7 +470,7 @@ module suipass::storage_manager {
     ): bool {
         storage_ref.blob_hash == provided_hash
     }
-    
+
     /// 计算存储效率 (字节/成本单位)
     public fun storage_efficiency(storage_ref: &StorageReference): u64 {
         if (storage_ref.storage_cost == 0) {
@@ -501,7 +501,7 @@ classDiagram
         +metadata: vector~String~
         +log_audit_event()
     }
-    
+
     class VaultStats {
         +id: UID
         +vault_id: ID
@@ -514,7 +514,7 @@ classDiagram
         +update_stats()
         +security_score()
     }
-    
+
     class ActionConstants {
         <<constants>>
         +ACTION_CREATE: u8 = 1
@@ -523,7 +523,7 @@ classDiagram
         +ACTION_DELETE: u8 = 4
         +ACTION_SHARE: u8 = 5
     }
-    
+
     AuditLog --> ActionConstants
     VaultStats --> ActionConstants
 ```
@@ -538,14 +538,14 @@ module suipass::audit_system {
     use sui::event;
     use std::string::String;
     use std::vector;
-    
+
     /// 动作类型常量
     const ACTION_CREATE: u8 = 1;        // 创建操作
     const ACTION_READ: u8 = 2;           // 读取操作
     const ACTION_UPDATE: u8 = 3;         // 更新操作
     const ACTION_DELETE: u8 = 4;         // 删除操作
     const ACTION_SHARE: u8 = 5;          // 分享操作
-    
+
     /// 审计日志条目
     public struct AuditLog has key {
         id: UID,
@@ -559,7 +559,7 @@ module suipass::audit_system {
         timestamp: u64,                 // 时间戳
         metadata: vector<String>,       // 附加元数据
     }
-    
+
     /// 统计信息
     public struct VaultStats has key {
         id: UID,
@@ -571,7 +571,7 @@ module suipass::audit_system {
         unique_users: vector<address>,  // 唯一用户列表
         operation_types: vector<u64>,   // 操作类型统计
     }
-    
+
     /// 记录审计日志
     public fun log_audit_event(
         vault_id: ID,
@@ -585,7 +585,7 @@ module suipass::audit_system {
         ctx: &mut TxContext
     ): AuditLog {
         let timestamp = clock::timestamp_ms(clock) / 1000;
-        
+
         AuditLog {
             id: object::new(ctx),
             vault_id,
@@ -599,7 +599,7 @@ module suipass::audit_system {
             metadata,
         }
     }
-    
+
     /// 获取安全评分 (基于审计数据)
     public fun security_score(stats: &VaultStats): u64 {
         if (stats.total_operations == 0) {
@@ -607,20 +607,20 @@ module suipass::audit_system {
         } else {
             let success_rate = (stats.successful_operations * 100) / stats.total_operations;
             let unique_user_count = vector::length(&stats.unique_users);
-            
+
             let mut score = success_rate;
-            
+
             // 根据唯一用户数量调整分数
             if (unique_user_count == 1) {
                 score = score + 10; // 单一用户使用，更安全
             } else if (unique_user_count > 5) {
                 score = score - 10; // 多用户使用，风险稍高
             };
-            
+
             // 确保分数在 0-100 范围内
             if (score > 100) score = 100;
             if (score < 0) score = 0;
-            
+
             score
         }
     }
@@ -642,7 +642,7 @@ classDiagram
         +get_vault_info()
         +get_security_score()
     }
-    
+
     class Vault {
         +id: UID
         +owner: address
@@ -650,7 +650,7 @@ classDiagram
         +walrus_blob_id: String
         +settings: VaultSettings
     }
-    
+
     class VaultStats {
         +id: UID
         +vault_id: ID
@@ -658,7 +658,7 @@ classDiagram
         +successful_operations: u64
         +security_score()
     }
-    
+
     SuiPassVault --> Vault
     SuiPassVault --> VaultStats
 ```
@@ -673,19 +673,19 @@ module suipass::suipass_main {
     use sui::transfer;
     use std::string::String;
     use std::vector;
-    
+
     // 引入子模块
     use suipass::vault_core::{Self, Vault, VaultSettings};
     use suipass::permission_manager::{Self, PermissionCapability};
     use suipass::storage_manager::{Self, StorageReference, EncryptionInfo};
     use suipass::audit_system::{Self, AuditLog, VaultStats};
-    
+
     /// SuiPass 主合约 - 统一入口点
     public struct SuiPassVault has key {
         vault: Vault,
         stats: VaultStats,
     }
-    
+
     /// 创建完整的 SuiPass 保险库
     public fun create_suipass_vault(
         name: String,
@@ -701,20 +701,20 @@ module suipass::suipass_main {
             clock,
             ctx
         );
-        
+
         let stats = audit_system::create_vault_stats(
             object::id(&vault),
             ctx
         );
-        
+
         let suipass_vault = SuiPassVault {
             vault,
             stats,
         };
-        
+
         transfer::transfer(suipass_vault, tx_context::sender(ctx));
     }
-    
+
     /// 分享保险库访问权限
     public fun share_vault_access(
         suipass_vault: &SuiPassVault,
@@ -737,17 +737,17 @@ module suipass::suipass_main {
             ctx
         )
     }
-    
+
     /// 获取保险库完整信息
     public fun get_vault_info(
         suipass_vault: &SuiPassVault
     ): (address, String, u64, u64, u64) {
         let (owner, name, version, updated_at) = vault_core::vault_info(&suipass_vault.vault);
         let (total_ops, success_ops, failed_ops, success_rate, unique_users) = audit_system::get_stats(&suipass_vault.stats);
-        
+
         (owner, name, version, updated_at, success_rate)
     }
-    
+
     /// 获取安全评分
     public fun get_security_score(
         suipass_vault: &SuiPassVault
@@ -768,7 +768,7 @@ sequenceDiagram
     participant S as SuiPass 合约
     participant W as Walrus 存储
     participant A as 审计系统
-    
+
     U->>F: 创建保险库请求
     F->>S: create_suipass_vault()
     S->>W: 上传加密数据
@@ -777,14 +777,14 @@ sequenceDiagram
     S->>S: 创建 Vault 对象
     S-->>F: 返回 vault_id
     F-->>U: 显示创建成功
-    
+
     U->>F: 分享权限请求
     F->>S: share_vault_access()
     S->>S: 创建 PermissionCapability
     S->>A: 记录分享事件
     S-->>F: 返回权限对象
     F-->>U: 显示分享成功
-    
+
     U->>F: 更新数据请求
     F->>W: 上传新数据
     W-->>F: 返回新 blob_id
@@ -798,12 +798,12 @@ sequenceDiagram
 
 ### Gas 优化对比
 
-| 优化策略 | 原始成本 | 优化后成本 | 节省比例 |
-|---------|---------|-----------|---------|
-| 最小化链上存储 | 15,000 Gas | 3,000 Gas | 80% |
-| 位掩码权限 | 2,000 Gas | 500 Gas | 75% |
-| 批量操作 | 10,000 Gas | 4,000 Gas | 60% |
-| 事件压缩 | 5,000 Gas | 1,500 Gas | 70% |
+| 优化策略       | 原始成本   | 优化后成本 | 节省比例 |
+| -------------- | ---------- | ---------- | -------- |
+| 最小化链上存储 | 15,000 Gas | 3,000 Gas  | 80%      |
+| 位掩码权限     | 2,000 Gas  | 500 Gas    | 75%      |
+| 批量操作       | 10,000 Gas | 4,000 Gas  | 60%      |
+| 事件压缩       | 5,000 Gas  | 1,500 Gas  | 70%      |
 
 ### 存储优化策略
 
@@ -875,18 +875,21 @@ let security_score = suipass_main::get_security_score(&vault);
 ### 演示场景设计
 
 #### 1. **核心功能演示**
+
 - 创建个人保险库
 - 上传加密密码数据
 - 实时权限分享
 - 版本回滚功能
 
 #### 2. **技术亮点展示**
+
 - Gas 优化效果对比
 - 安全评分系统
 - 审计日志追踪
 - Walrus 存储集成
 
 #### 3. **用户体验演示**
+
 - 简洁的界面操作
 - 实时状态更新
 - 权限管理流程
@@ -912,36 +915,39 @@ graph TD
 
 ### 黑客松开发计划
 
-| 阶段 | 时间 | 任务 | 交付物 |
-|------|------|------|--------|
-| Day 1 | 6小时 | 核心Vault结构 | Vault创建、更新功能 |
-| Day 2 | 6小时 | 权限管理系统 | 权限授予、验证功能 |
-| Day 3 | 6小时 | Walrus存储集成 | 数据上传、下载功能 |
-| Day 4 | 6小时 | 审计系统 | 操作日志、统计功能 |
-| Day 5 | 6小时 | 前端集成和演示 | 完整演示系统 |
+| 阶段  | 时间  | 任务           | 交付物              |
+| ----- | ----- | -------------- | ------------------- |
+| Day 1 | 6小时 | 核心Vault结构  | Vault创建、更新功能 |
+| Day 2 | 6小时 | 权限管理系统   | 权限授予、验证功能  |
+| Day 3 | 6小时 | Walrus存储集成 | 数据上传、下载功能  |
+| Day 4 | 6小时 | 审计系统       | 操作日志、统计功能  |
+| Day 5 | 6小时 | 前端集成和演示 | 完整演示系统        |
 
 ### 风险评估
 
-| 风险 | 概率 | 影响 | 缓解措施 |
-|------|------|------|----------|
-| Walrus集成问题 | 中 | 高 | 准备备用存储方案 |
-| Gas成本过高 | 低 | 中 | 优化数据结构 |
-| 前端集成延迟 | 中 | 中 | 使用简化UI |
-| 权限系统复杂 | 低 | 低 | 简化权限模型 |
+| 风险           | 概率 | 影响 | 缓解措施         |
+| -------------- | ---- | ---- | ---------------- |
+| Walrus集成问题 | 中   | 高   | 准备备用存储方案 |
+| Gas成本过高    | 低   | 中   | 优化数据结构     |
+| 前端集成延迟   | 中   | 中   | 使用简化UI       |
+| 权限系统复杂   | 低   | 低   | 简化权限模型     |
 
 ## 🔧 扩展建议
 
 ### 短期扩展 (1-2周)
+
 - **多因素认证**：集成 2FA 支持
 - **数据导入导出**：支持主流密码管理器格式
 - **浏览器扩展**：提供自动填充功能
 
 ### 中期扩展 (1-2月)
+
 - **团队协作**：支持多用户协作
 - **高级分享**：更灵活的分享策略
 - **API 集成**：提供第三方集成接口
 
 ### 长期扩展 (3-6月)
+
 - **企业功能**：企业级安全和管理功能
 - **移动端**：移动应用支持
 - **高级分析**：安全分析和报告功能

@@ -1,0 +1,111 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release"
+        required: true
+        default: "patch"
+        type: choice
+        options: [patch, minor, major]
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    name: Create Release
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm bootstrap
+
+      - name: Create changeset
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          pnpm changeset
+          echo "Created changeset for ${{ github.event.inputs.version }} version bump"
+
+      - name: Version packages
+        run: |
+          pnpm version-packages
+          git push --follow-tags
+          echo "Packages versioned successfully"
+
+      - name: Build project
+        run: pnpm build
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Run contract tests
+        run: pnpm contract:test
+
+      - name: Publish to npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          pnpm config set @suipass:registry https://registry.npmjs.org/
+          pnpm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
+          pnpm release
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            ## Release ${{ github.ref }}
+
+            ### Changes
+            <!-- Add release notes here -->
+
+            ### Installation
+            ```bash
+            npm install @suipass/frontend@latest
+            ```
+
+            ### Documentation
+            📚 [View Documentation](https://docs.suipass.dev)
+
+            ### Support
+            🐛 [Report Issues](https://github.com/your-repo/suipass/issues)
+
+            🤖 Generated with [SuiPass CI](https://github.com/your-repo/suipass)
+          draft: false
+          prerelease: false

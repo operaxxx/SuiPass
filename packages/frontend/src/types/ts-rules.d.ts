@@ -98,12 +98,16 @@ export type NonNullable<T> = T extends null | undefined ? never : T;
 /**
  * 函数参数类型
  */
-export type Parameters<T extends (...args: any[]) => any> = T extends (...args: infer P) => any ? P : never;
+export type Parameters<T extends (...args: any[]) => any> = T extends (...args: infer P) => any
+  ? P
+  : never;
 
 /**
  * 函数返回类型
  */
-export type ReturnType<T extends (...args: any[]) => any> = T extends (...args: any[]) => infer R ? R : any;
+export type ReturnType<T extends (...args: any[]) => any> = T extends (...args: any[]) => infer R
+  ? R
+  : any;
 
 // ============================================================================
 // 加密相关类型
@@ -527,7 +531,7 @@ export interface CSPConfig {
   /** 框架源 */
   'frame-src': string[];
   /** 沙箱 */
-  'sandbox'?: string[];
+  sandbox?: string[];
 }
 
 // ============================================================================

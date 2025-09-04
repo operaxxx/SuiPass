@@ -14,27 +14,20 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    
+
     // 测试文件匹配模式
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
-    exclude: [
-      'node_modules/',
-      'dist/',
-      '.idea/',
-      '.git/',
-      '.cache/',
-      'src/test/setup.ts',
-    ],
-    
+    exclude: ['node_modules/', 'dist/', '.idea/', '.git/', '.cache/', 'src/test/setup.ts'],
+
     // 全局测试配置
     globals: true,
     environment: 'jsdom',
-    
+
     // 模拟和清理
     mockReset: true,
     restoreMocks: true,
     clearMocks: true,
-    
+
     // 覆盖率配置
     coverage: {
       provider: 'v8',
@@ -59,34 +52,34 @@ export default defineConfig({
         },
       },
     },
-    
+
     // 超时配置
     testTimeout: 10000,
     hookTimeout: 10000,
-    
+
     // 并行配置
     maxWorkers: 4,
     minWorkers: 1,
-    
+
     // 报告配置
     reporters: ['verbose'],
     outputFile: {
-      'junit': 'junit-report.xml',
+      junit: 'junit-report.xml',
     },
-    
+
     // 快照配置
     snapshotFormat: {
       printBasicPrototype: false,
     },
     snapshotSerializers: [],
-    
+
     // 环境变量
     env: {
       NODE_ENV: 'test',
       VITE_SUI_NETWORK: 'testnet',
       VITE_ENABLE_LOCAL_MODE: 'true',
     },
-    
+
     // 类型检查
     typecheck: {
       enabled: true,

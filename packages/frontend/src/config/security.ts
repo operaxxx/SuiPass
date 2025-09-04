@@ -14,30 +14,18 @@ export const securityConfig = {
       "'self'",
       "'unsafe-inline'",
       "'unsafe-eval'",
-      'https://sui-testnet.rpc', 
-      'https://walrus-testnet.rpc'
+      'https://sui-testnet.rpc',
+      'https://walrus-testnet.rpc',
     ],
-    'style-src': [
-      "'self'",
-      "'unsafe-inline'",
-      'https://fonts.googleapis.com'
-    ],
-    'img-src': [
-      "'self'",
-      'data:',
-      'https:',
-      'blob:'
-    ],
-    'font-src': [
-      "'self'",
-      'https://fonts.gstatic.com'
-    ],
+    'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+    'img-src': ["'self'", 'data:', 'https:', 'blob:'],
+    'font-src': ["'self'", 'https://fonts.gstatic.com'],
     'connect-src': [
       "'self'",
       'https://sui-testnet.rpc',
       'https://walrus-testnet.rpc',
       'https://api.suiet.app',
-      'wss://sui-testnet.rpc'
+      'wss://sui-testnet.rpc',
     ],
     'object-src': ["'none'"],
     'base-uri': ["'self'"],
@@ -107,12 +95,7 @@ export const securityConfig = {
       'https://api.suiet.app',
     ],
     allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-Requested-With',
-      'X-CSRF-Token',
-    ],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token'],
     rateLimiting: {
       windowMs: 15 * 60 * 1000, // 15分钟
       max: 100, // 每个IP最大请求数
@@ -122,13 +105,9 @@ export const securityConfig = {
   // 输入验证
   validation: {
     maxInputLength: 10000,
-    allowedHtmlTags: [
-      'a', 'b', 'i', 'u', 'em', 'strong', 'code', 'pre', 'br', 'p'
-    ],
+    allowedHtmlTags: ['a', 'b', 'i', 'u', 'em', 'strong', 'code', 'pre', 'br', 'p'],
     sanitizeOptions: {
-      ALLOWED_TAGS: [
-        'a', 'b', 'i', 'u', 'em', 'strong', 'code', 'pre', 'br', 'p'
-      ],
+      ALLOWED_TAGS: ['a', 'b', 'i', 'u', 'em', 'strong', 'code', 'pre', 'br', 'p'],
       ALLOWED_ATTR: ['href', 'title', 'target'],
     },
   },
@@ -136,13 +115,7 @@ export const securityConfig = {
   // 文件上传安全
   fileUpload: {
     maxFileSize: 10 * 1024 * 1024, // 10MB
-    allowedTypes: [
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'application/pdf',
-    ],
+    allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'],
     allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf'],
     virusScan: true,
     malwareCheck: true,
@@ -175,7 +148,7 @@ export function generateCSPHeader(): string {
   const directives = Object.entries(csp)
     .map(([key, values]) => `${key} ${values.join(' ')}`)
     .join('; ');
-  
+
   return directives;
 }
 
@@ -247,7 +220,7 @@ export function maskSensitiveData(data: any, context: string = 'default'): any {
   }
 
   const masked = { ...data };
-  
+
   for (const [key, value] of Object.entries(masked)) {
     if (sensitiveFields.hasOwnProperty(key)) {
       masked[key] = sensitiveFields[key as keyof typeof sensitiveFields];
@@ -324,10 +297,18 @@ export function validatePasswordStrength(password: string): {
   // 常见密码检查
   if (securityConfig.passwordPolicy.preventCommonPasswords) {
     const commonPasswords = [
-      'password', '123456', '12345678', '123456789', '12345',
-      'qwerty', 'abc123', 'password1', 'admin', 'welcome'
+      'password',
+      '123456',
+      '12345678',
+      '123456789',
+      '12345',
+      'qwerty',
+      'abc123',
+      'password1',
+      'admin',
+      'welcome',
     ];
-    
+
     if (commonPasswords.includes(password.toLowerCase())) {
       feedback.push('请使用更安全的密码');
       score -= 20;
@@ -355,7 +336,7 @@ export function validateCSRFToken(token: string, sessionToken: string): boolean 
   if (!token || !sessionToken) {
     return false;
   }
-  
+
   // 这里应该实现更复杂的验证逻辑
   // 例如，检查令牌是否在会话中存在且未过期
   return token === sessionToken;
@@ -367,17 +348,17 @@ export function validateCSRFToken(token: string, sessionToken: string): boolean 
 export function validateURL(url: string): boolean {
   try {
     const parsedUrl = new URL(url);
-    
+
     // 检查协议
     if (!['https:', 'http:'].includes(parsedUrl.protocol)) {
       return false;
     }
-    
+
     // 检查是否为本地主机（开发环境）
     if (parsedUrl.hostname === 'localhost' || parsedUrl.hostname === '127.0.0.1') {
       return process.env.NODE_ENV === 'development';
     }
-    
+
     // 检查是否在允许的域名列表中
     const allowedOrigins = securityConfig.network.allowedOrigins;
     return allowedOrigins.some(origin => {
@@ -399,17 +380,17 @@ export function validateURL(url: string): boolean {
 export function safeJsonParse<T>(jsonString: string, defaultValue: T): T {
   try {
     const parsed = JSON.parse(jsonString);
-    
+
     // 验证解析结果是否为安全的对象
     if (typeof parsed === 'object' && parsed !== null) {
       // 检查原型污染
       if ('__proto__' in parsed || 'constructor' in parsed) {
         return defaultValue;
       }
-      
+
       return parsed as T;
     }
-    
+
     return defaultValue;
   } catch {
     return defaultValue;
@@ -426,7 +407,7 @@ export function applySecurityHeaders(): void {
 
   // 生成CSP头部
   const cspHeader = generateCSPHeader();
-  
+
   // 应用安全头部（在服务器端环境中）
   // 这里只是示例，实际应用中需要在服务器端配置
   console.log('Security headers to be applied:', {
@@ -439,7 +420,7 @@ export function applySecurityHeaders(): void {
 export function initializeSecurity(): void {
   // 应用安全头部
   applySecurityHeaders();
-  
+
   // 禁用某些不安全的功能
   if (typeof window !== 'undefined') {
     // 禁用console.log在生产环境
@@ -447,16 +428,16 @@ export function initializeSecurity(): void {
       console.log = () => {};
       console.debug = () => {};
     }
-    
+
     // 禁用右键菜单（可选）
-    document.addEventListener('contextmenu', (e) => {
+    document.addEventListener('contextmenu', e => {
       if (process.env.NODE_ENV === 'production') {
         e.preventDefault();
       }
     });
-    
+
     // 禁用文本选择（可选）
-    document.addEventListener('selectstart', (e) => {
+    document.addEventListener('selectstart', e => {
       if (process.env.NODE_ENV === 'production') {
         e.preventDefault();
       }

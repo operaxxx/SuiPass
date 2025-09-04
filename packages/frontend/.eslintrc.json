@@ -1,9 +1,9 @@
 {
   "root": true,
-  "env": { 
-    "browser": true, 
-    "es2020": true, 
-    "node": true 
+  "env": {
+    "browser": true,
+    "es2020": true,
+    "node": true
   },
   "extends": [
     "eslint:recommended",
@@ -18,8 +18,8 @@
     "plugin:unicorn/recommended"
   ],
   "ignorePatterns": [
-    "dist", 
-    ".eslintrc.json", 
+    "dist",
+    ".eslintrc.json",
     "routeTree.gen.ts",
     "node_modules",
     "*.config.js",
@@ -64,7 +64,7 @@
     "@typescript-eslint/prefer-nullish-coalescing": "error",
     "@typescript-eslint/prefer-optional-chain": "error",
     "@typescript-eslint/no-floating-promises": "error",
-    
+
     // React 规则
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
@@ -76,7 +76,7 @@
     "react/no-array-index-key": "error",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
-    
+
     // 安全规则
     "security/detect-object-injection": "error",
     "security/detect-non-literal-fs-filename": "error",
@@ -85,18 +85,21 @@
     "security/detect-eval-with-expression": "error",
     "security/detect-no-csrf-before-method-override": "error",
     "security/detect-non-literal-require": "warn",
-    
+
     // 导入规则
-    "import/order": ["error", {
-      "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
-      "newlines-between": "always",
-      "alphabetize": { "order": "asc", "caseInsensitive": true }
-    }],
+    "import/order": [
+      "error",
+      {
+        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
+        "newlines-between": "always",
+        "alphabetize": { "order": "asc", "caseInsensitive": true }
+      }
+    ],
     "import/no-unresolved": "error",
     "import/no-duplicates": "error",
     "import/no-cycle": "error",
     "import/no-useless-path-segments": "error",
-    
+
     // Unicorn 规则
     "unicorn/filename-case": ["error", { "case": "camelCase" }],
     "unicorn/no-null": "error",
@@ -104,14 +107,14 @@
     "unicorn/prefer-spread": "error",
     "unicorn/prefer-array-some": "error",
     "unicorn/prefer-array-find": "error",
-    
+
     // SonarJS 规则
     "sonarjs/cognitive-complexity": ["warn", 15],
     "sonarjs/no-duplicate-string": "warn",
     "sonarjs/no-identical-functions": "warn",
     "sonarjs/no-collapsible-if": "error",
     "sonarjs/prefer-immediate-return": "error",
-    
+
     // 通用规则
     "no-console": ["warn", { "allow": ["warn", "error"] }],
     "no-debugger": "error",

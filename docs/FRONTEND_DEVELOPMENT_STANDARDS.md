@@ -53,21 +53,24 @@
   ],
   "rules": {
     // TypeScript 规则
-    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      { "argsIgnorePattern": "^_" }
+    ],
     "@typescript-eslint/no-explicit-any": "error",
     "@typescript-eslint/explicit-function-return-type": "error",
     "@typescript-eslint/no-non-null-assertion": "error",
     "@typescript-eslint/prefer-nullish-coalescing": "error",
     "@typescript-eslint/prefer-optional-chain": "error",
     "@typescript-eslint/consistent-type-imports": "error",
-    
+
     // React 规则
     "react/prop-types": "off",
     "react/react-in-jsx-scope": "off",
     "react/jsx-uses-react": "off",
     "react/jsx-key": "error",
     "react/no-unescaped-entities": "warn",
-    
+
     // 安全规则
     "security/detect-object-injection": "error",
     "security/detect-non-literal-fs-filename": "error",
@@ -76,22 +79,32 @@
     "security/detect-no-csrf-before-method-override": "error",
     "security/detect-non-literal-require": "error",
     "security/detect-non-literal-import": "error",
-    
+
     // 性能和代码质量
     "sonarjs/cognitive-complexity": ["error", 15],
     "sonarjs/no-identical-functions": "error",
     "sonarjs/no-duplicate-string": "warn",
     "sonarjs/no-collapsible-if": "error",
     "sonarjs/prefer-immediate-return": "error",
-    
+
     // 导入规则
-    "import/order": ["error", {
-      "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
-      "newlines-between": "always"
-    }],
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          "sibling",
+          "index"
+        ],
+        "newlines-between": "always"
+      }
+    ],
     "import/no-cycle": "error",
     "import/no-unused-modules": "error",
-    
+
     // 通用规则
     "no-console": ["error", { "allow": ["warn", "error"] }],
     "no-debugger": "error",
@@ -134,50 +147,49 @@
 ```javascript
 // commitlint.config.js
 module.exports = {
-  extends: ['@commitlint/config-conventional'],
+  extends: ["@commitlint/config-conventional"],
   rules: {
-    'type-enum': [
+    "type-enum": [
       2,
-      'always',
+      "always",
       [
-        'feat',     // 新功能
-        'fix',      // 修复bug
-        'docs',     // 文档更新
-        'style',    // 代码格式化
-        'refactor', // 重构
-        'perf',     // 性能优化
-        'test',     // 测试相关
-        'chore',    // 构建工具或依赖管理
-        'security', // 安全相关
-        'ci'        // CI配置
+        "feat", // 新功能
+        "fix", // 修复bug
+        "docs", // 文档更新
+        "style", // 代码格式化
+        "refactor", // 重构
+        "perf", // 性能优化
+        "test", // 测试相关
+        "chore", // 构建工具或依赖管理
+        "security", // 安全相关
+        "ci", // CI配置
       ],
     ],
-    'type-case': [2, 'always', 'lower-case'],
-    'type-empty': [2, 'never'],
-    'scope-case': [2, 'always', 'lower-case'],
-    'subject-case': [2, 'never', ['sentence-case', 'start-case', 'pascal-case', 'upper-case']],
-    'subject-empty': [2, 'never'],
-    'subject-full-stop': [2, 'never', '.'],
-    'header-max-length': [2, 'always', 72],
-    'body-leading-blank': [1, 'always'],
-    'body-max-line-length': [2, 'always', 100],
-    'footer-leading-blank': [1, 'always'],
-    'footer-max-line-length': [2, 'always', 100],
+    "type-case": [2, "always", "lower-case"],
+    "type-empty": [2, "never"],
+    "scope-case": [2, "always", "lower-case"],
+    "subject-case": [
+      2,
+      "never",
+      ["sentence-case", "start-case", "pascal-case", "upper-case"],
+    ],
+    "subject-empty": [2, "never"],
+    "subject-full-stop": [2, "never", "."],
+    "header-max-length": [2, "always", 72],
+    "body-leading-blank": [1, "always"],
+    "body-max-line-length": [2, "always", 100],
+    "footer-leading-blank": [1, "always"],
+    "footer-max-line-length": [2, "always", 100],
   },
-}
+};
 ```
 
 ### 1.4 lint-staged配置
 
 ```json
 {
-  "*.{js,jsx,ts,tsx}": [
-    "eslint --fix",
-    "prettier --write"
-  ],
-  "*.{json,md,yml,yaml}": [
-    "prettier --write"
-  ]
+  "*.{js,jsx,ts,tsx}": ["eslint --fix", "prettier --write"],
+  "*.{json,md,yml,yaml}": ["prettier --write"]
 }
 ```
 
@@ -194,7 +206,7 @@ interface User {
 }
 
 // 联合类型使用 type
-type Status = 'active' | 'inactive' | 'pending';
+type Status = "active" | "inactive" | "pending";
 
 // 函数类型定义
 type AsyncCallback = (error: Error | null, result: string) => void;
@@ -215,16 +227,16 @@ class SuiPassError extends Error {
   constructor(
     message: string,
     public code: string,
-    public details?: unknown
+    public details?: unknown,
   ) {
     super(message);
-    this.name = 'SuiPassError';
+    this.name = "SuiPassError";
   }
 }
 
 // 错误处理函数
 async function handleAsyncOperation<T>(
-  operation: () => Promise<T>
+  operation: () => Promise<T>,
 ): Promise<T> {
   try {
     return await operation();
@@ -232,16 +244,12 @@ async function handleAsyncOperation<T>(
     if (error instanceof SuiPassError) {
       throw error;
     }
-    
+
     // 记录错误日志
-    console.error('Operation failed:', error);
-    
+    console.error("Operation failed:", error);
+
     // 转换为应用错误
-    throw new SuiPassError(
-      'Operation failed',
-      'OPERATION_FAILED',
-      error
-    );
+    throw new SuiPassError("Operation failed", "OPERATION_FAILED", error);
   }
 }
 ```
@@ -257,7 +265,7 @@ async function fetchVault(vaultId: string): Promise<Vault> {
 
 // Promise.all 并行处理
 async function fetchMultipleVaults(vaultIds: string[]): Promise<Vault[]> {
-  const promises = vaultIds.map(id => vaultService.getVault(id));
+  const promises = vaultIds.map((id) => vaultService.getVault(id));
   const vaults = await Promise.all(promises);
   return vaults;
 }
@@ -294,7 +302,7 @@ const SecureComponent: React.FC<ComponentProps> = ({
   children
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const handleAction = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -303,12 +311,12 @@ const SecureComponent: React.FC<ComponentProps> = ({
       setIsLoading(false);
     }
   }, [onAction]);
-  
+
   return (
     <div className={`secure-component ${className}`}>
       <h2>{title}</h2>
       {children}
-      <button 
+      <button
         onClick={handleAction}
         disabled={isLoading}
       >
@@ -340,17 +348,17 @@ SecureComponent.propTypes = {
 // 自定义Hook
 function useEncryptedData<T>(
   data: T,
-  encryptionKey: string
+  encryptionKey: string,
 ): [T | null, boolean, Error | null] {
   const [encryptedData, setEncryptedData] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  
+
   useEffect(() => {
     const encryptData = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const encrypted = await encryptionService.encrypt(data, encryptionKey);
         setEncryptedData(encrypted);
@@ -360,12 +368,12 @@ function useEncryptedData<T>(
         setIsLoading(false);
       }
     };
-    
+
     if (data && encryptionKey) {
       encryptData();
     }
   }, [data, encryptionKey]);
-  
+
   return [encryptedData, isLoading, error];
 }
 
@@ -373,12 +381,12 @@ function useEncryptedData<T>(
 const useSecureStorage = (key: string) => {
   // ✅ 正确：在顶层调用Hook
   const [value, setValue] = useState<string | null>(null);
-  
+
   useEffect(() => {
     const stored = localStorage.getItem(key);
     setValue(stored);
   }, [key]);
-  
+
   return [value, setValue] as const;
 };
 ```
@@ -400,16 +408,16 @@ const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
-      
+
       login: async (credentials) => {
         const user = await authService.login(credentials);
         set({ user, isAuthenticated: true });
       },
-      
+
       logout: () => {
         set({ user: null, isAuthenticated: false });
       },
-      
+
       updateUser: (userData) => {
         const currentUser = get().user;
         if (currentUser) {
@@ -418,23 +426,23 @@ const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'auth-storage',
+      name: "auth-storage",
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
-    }
-  )
+    },
+  ),
 );
 
 // 组件中使用
 const LoginComponent: React.FC = () => {
   const { login, isLoading } = useAuthStore();
-  
+
   const handleSubmit = async (formData: LoginFormData) => {
     await login(formData);
   };
-  
+
   // ...
 };
 ```
@@ -447,42 +455,54 @@ const LoginComponent: React.FC = () => {
 // 加密服务使用规范
 class SecureDataService {
   private encryptionService: EncryptionService;
-  
-  async encryptSensitiveData(data: unknown, masterPassword: string): Promise<EncryptedData> {
+
+  async encryptSensitiveData(
+    data: unknown,
+    masterPassword: string,
+  ): Promise<EncryptedData> {
     // 验证输入
     if (!data || !masterPassword) {
-      throw new Error('Invalid input data');
+      throw new Error("Invalid input data");
     }
-    
+
     // 序列化数据
     const serialized = JSON.stringify(data);
     const encoder = new TextEncoder();
     const dataBytes = encoder.encode(serialized);
-    
+
     // 加密数据
-    const encrypted = await this.encryptionService.encrypt(dataBytes, masterPassword);
-    
+    const encrypted = await this.encryptionService.encrypt(
+      dataBytes,
+      masterPassword,
+    );
+
     // 清理内存中的敏感数据
-    encoder.encode('');
-    
+    encoder.encode("");
+
     return encrypted;
   }
-  
-  async decryptSensitiveData<T>(encryptedData: EncryptedData, masterPassword: string): Promise<T> {
+
+  async decryptSensitiveData<T>(
+    encryptedData: EncryptedData,
+    masterPassword: string,
+  ): Promise<T> {
     try {
       // 解密数据
-      const decryptedBytes = await this.encryptionService.decrypt(encryptedData, masterPassword);
-      
+      const decryptedBytes = await this.encryptionService.decrypt(
+        encryptedData,
+        masterPassword,
+      );
+
       // 反序列化
       const decoder = new TextDecoder();
       const decryptedString = decoder.decode(decryptedBytes);
-      
+
       // 清理内存
-      decoder.decode('');
-      
+      decoder.decode("");
+
       return JSON.parse(decryptedString) as T;
     } catch (error) {
-      throw new Error('Failed to decrypt data');
+      throw new Error("Failed to decrypt data");
     }
   }
 }
@@ -495,40 +515,40 @@ class SecureDataService {
 class InputValidator {
   static validatePassword(password: string): ValidationResult {
     const errors: string[] = [];
-    
+
     if (password.length < 8) {
-      errors.push('Password must be at least 8 characters');
+      errors.push("Password must be at least 8 characters");
     }
-    
+
     if (!/[A-Z]/.test(password)) {
-      errors.push('Password must contain uppercase letters');
+      errors.push("Password must contain uppercase letters");
     }
-    
+
     if (!/[a-z]/.test(password)) {
-      errors.push('Password must contain lowercase letters');
+      errors.push("Password must contain lowercase letters");
     }
-    
+
     if (!/[0-9]/.test(password)) {
-      errors.push('Password must contain numbers');
+      errors.push("Password must contain numbers");
     }
-    
+
     if (!/[^A-Za-z0-9]/.test(password)) {
-      errors.push('Password must contain special characters');
+      errors.push("Password must contain special characters");
     }
-    
+
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
-  
+
   static sanitizeInput(input: string): string {
     return input
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#x27;')
-      .replace(/\//g, '&#x2F;');
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#x27;")
+      .replace(/\//g, "&#x2F;");
   }
 }
 ```
@@ -539,24 +559,28 @@ class InputValidator {
 // 安全配置
 export const securityConfig = {
   csp: {
-    'default-src': ["'self'"],
-    'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-    'style-src': ["'self'", "'unsafe-inline'"],
-    'img-src': ["'self'", 'data:', 'https:'],
-    'font-src': ["'self'", 'data:', 'https:'],
-    'connect-src': ["'self'", 'https://sui.testnet.rpc', 'https://walrus.testnet.rpc'],
-    'object-src': ["'none'"],
-    'base-uri': ["'self'"],
-    'form-action': ["'self'"],
-    'frame-ancestors': ["'none'"],
+    "default-src": ["'self'"],
+    "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+    "style-src": ["'self'", "'unsafe-inline'"],
+    "img-src": ["'self'", "data:", "https:"],
+    "font-src": ["'self'", "data:", "https:"],
+    "connect-src": [
+      "'self'",
+      "https://sui.testnet.rpc",
+      "https://walrus.testnet.rpc",
+    ],
+    "object-src": ["'none'"],
+    "base-uri": ["'self'"],
+    "form-action": ["'self'"],
+    "frame-ancestors": ["'none'"],
   },
   headers: {
-    'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
-    'X-XSS-Protection': '1; mode=block',
-    'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
-  }
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+  },
 };
 ```
 
@@ -566,39 +590,39 @@ export const securityConfig = {
 
 ```typescript
 // 测试工具函数
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useAuthStore } from '@/stores/auth';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import { useAuthStore } from "@/stores/auth";
 
-describe('Authentication Store', () => {
+describe("Authentication Store", () => {
   beforeEach(() => {
     // 重置store状态
     useAuthStore.setState({
       user: null,
-      isAuthenticated: false
+      isAuthenticated: false,
     });
   });
-  
-  it('should initialize with default state', () => {
+
+  it("should initialize with default state", () => {
     const { result } = renderHook(() => useAuthStore());
-    
+
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
   });
-  
-  it('should update user data', async () => {
+
+  it("should update user data", async () => {
     const { result } = renderHook(() => useAuthStore());
-    
+
     const mockUser = {
-      id: '123',
-      name: 'Test User',
-      email: 'test@example.com'
+      id: "123",
+      name: "Test User",
+      email: "test@example.com",
     };
-    
+
     await act(async () => {
       await result.current.updateUser(mockUser);
     });
-    
+
     expect(result.current.user).toEqual(mockUser);
   });
 });
@@ -616,7 +640,7 @@ vi.mock('@/stores/auth');
 
 describe('SecureLoginForm', () => {
   const mockLogin = vi.fn();
-  
+
   beforeEach(() => {
     vi.mocked(useAuthStore).mockReturnValue({
       login: mockLogin,
@@ -624,27 +648,27 @@ describe('SecureLoginForm', () => {
       error: null
     });
   });
-  
+
   it('should render login form', () => {
     render(<SecureLoginForm />);
-    
+
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
   });
-  
+
   it('should handle form submission', async () => {
     render(<SecureLoginForm />);
-    
+
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: 'test@example.com' }
     });
     fireEvent.change(screen.getByLabelText(/password/i), {
       target: { value: 'password123' }
     });
-    
+
     fireEvent.click(screen.getByRole('button', { name: /login/i }));
-    
+
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({
         email: 'test@example.com',
@@ -659,30 +683,32 @@ describe('SecureLoginForm', () => {
 
 ```typescript
 // E2E测试示例
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Authentication Flow', () => {
-  test('should login successfully with valid credentials', async ({ page }) => {
-    await page.goto('/login');
-    
-    await page.fill('[data-testid="email"]', 'test@example.com');
-    await page.fill('[data-testid="password"]', 'securepassword123');
+test.describe("Authentication Flow", () => {
+  test("should login successfully with valid credentials", async ({ page }) => {
+    await page.goto("/login");
+
+    await page.fill('[data-testid="email"]', "test@example.com");
+    await page.fill('[data-testid="password"]', "securepassword123");
     await page.click('[data-testid="login-button"]');
-    
-    await expect(page).toHaveURL('/dashboard');
+
+    await expect(page).toHaveURL("/dashboard");
     await expect(page.locator('[data-testid="welcome-message"]')).toBeVisible();
   });
-  
-  test('should show error message with invalid credentials', async ({ page }) => {
-    await page.goto('/login');
-    
-    await page.fill('[data-testid="email"]', 'invalid@example.com');
-    await page.fill('[data-testid="password"]', 'wrongpassword');
+
+  test("should show error message with invalid credentials", async ({
+    page,
+  }) => {
+    await page.goto("/login");
+
+    await page.fill('[data-testid="email"]', "invalid@example.com");
+    await page.fill('[data-testid="password"]', "wrongpassword");
     await page.click('[data-testid="login-button"]');
-    
+
     await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
     await expect(page.locator('[data-testid="error-message"]')).toHaveText(
-      /invalid credentials/i
+      /invalid credentials/i,
     );
   });
 });
@@ -692,15 +718,15 @@ test.describe('Authentication Flow', () => {
 
 ### 6.1 代码注释规范
 
-```typescript
+````typescript
 /**
  * 加密敏感数据
- * 
+ *
  * @param data - 需要加密的数据对象
  * @param masterPassword - 主密码用于派生加密密钥
  * @returns Promise<EncryptedData> - 加密后的数据对象
  * @throws {Error} - 当加密失败时抛出错误
- * 
+ *
  * @example
  * ```typescript
  * const encrypted = await encryptSensitiveData(
@@ -711,18 +737,18 @@ test.describe('Authentication Flow', () => {
  */
 async function encryptSensitiveData(
   data: Record<string, unknown>,
-  masterPassword: string
+  masterPassword: string,
 ): Promise<EncryptedData> {
   // 实现加密逻辑
 }
-```
+````
 
 ### 6.2 组件文档规范
 
-```typescript
+````typescript
 /**
  * 安全登录表单组件
- * 
+ *
  * @component
  * @example
  * ```tsx
@@ -743,26 +769,26 @@ interface SecureLoginFormProps {
   /** 自定义样式类名 */
   className?: string;
 }
-```
+````
 
 ### 6.3 API文档规范
 
-```typescript
+````typescript
 /**
  * 保险库服务API
- * 
+ *
  * @namespace VaultService
  */
 export const VaultService = {
   /**
    * 创建新的保险库
-   * 
+   *
    * @param {string} name - 保险库名称
    * @param {VaultSettings} settings - 保险库设置
    * @returns {Promise<VaultInfo>} - 创建的保险库信息
-   * 
+   *
    * @throws {SuiPassError} - 当创建失败时抛出错误
-   * 
+   *
    * @example
    * ```typescript
    * const vault = await VaultService.createVault('My Vault', {
@@ -771,13 +797,16 @@ export const VaultService = {
    * });
    * ```
    */
-  createVault: async (name: string, settings: VaultSettings): Promise<VaultInfo> => {
+  createVault: async (
+    name: string,
+    settings: VaultSettings,
+  ): Promise<VaultInfo> => {
     // 实现逻辑
   },
-  
+
   // 其他API方法...
 };
-```
+````
 
 ## 7. 开发工作流程
 

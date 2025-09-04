@@ -13,9 +13,7 @@
         "data_validation",
         "front_running"
       ],
-      "exclude_patterns": [
-        "tests/"
-      ]
+      "exclude_patterns": ["tests/"]
     },
     "frontend": {
       "csp": {
@@ -23,7 +21,11 @@
         "script-src": ["'self'", "'unsafe-inline'"],
         "style-src": ["'self'", "'unsafe-inline'"],
         "img-src": ["'self'", "data:", "https:"],
-        "connect-src": ["'self'", "https://sui.testnet.rpc", "https://walrus.testnet.rpc"]
+        "connect-src": [
+          "'self'",
+          "https://sui.testnet.rpc",
+          "https://walrus.testnet.rpc"
+        ]
       },
       "content_security": {
         "sanitize_inputs": true,

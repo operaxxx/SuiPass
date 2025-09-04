@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "📋 Running commit message validation..."
+
+# Run commitlint
+pnpm commitlint --edit "$1" || exit 1
+
+# Additional checks for commit quality
+commit_msg=$(cat "$1")
+
+# Check for conventional commit format
+if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|perf|test|chore|ci|build|revert|wip|security)(\(.+\))?!?: "; then
+    echo "❌ Commit message must follow conventional commit format"
+    echo "   Format: <type>(<scope>): <description>"
+    echo "   Example: feat(auth): add OAuth2 login"
+    exit 1
+fi
+
+# Check for WIP commits on main branch
+branch=$(git branch --show-current)
+if echo "$commit_msg" | grep -q "wip" && [ "$branch" = "main" ]; then
+    echo "❌ WIP commits are not allowed on main branch"
+    exit 1
+fi
+
+echo "✅ Commit message validation passed!"

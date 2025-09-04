@@ -16,6 +16,7 @@
 ### 提交代码
 
 1. **Fork 仓库**
+
    ```bash
    # Fork 并克隆到本地
    git clone https://github.com/your-username/suipass.git
@@ -23,11 +24,13 @@
    ```
 
 2. **设置上游仓库**
+
    ```bash
    git remote add upstream https://github.com/your-org/suipass.git
    ```
 
 3. **创建功能分支**
+
    ```bash
    # 从最新的 main 分支创建
    git fetch upstream
@@ -40,6 +43,7 @@
    - 更新文档
 
 5. **提交更改**
+
    ```bash
    git add .
    git commit -m "feat: add your feature description"
@@ -66,6 +70,7 @@
 ```
 
 类型包括：
+
 - `feat`: 新功能
 - `fix`: Bug 修复
 - `docs`: 文档更新
@@ -75,6 +80,7 @@
 - `chore`: 构建或工具变动
 
 示例：
+
 ```
 feat(zklogin): add Google OAuth provider support
 
@@ -96,7 +102,7 @@ interface User {
 }
 
 // ❌ 避免 any 类型
-const data: any = fetchData();  // 不要这样做
+const data: any = fetchData(); // 不要这样做
 
 // ✅ 使用具体类型
 interface Data {
@@ -110,17 +116,14 @@ const data: Data = fetchData();
 ```tsx
 // ✅ 使用函数组件和 Hooks
 interface ButtonProps {
-  variant: 'primary' | 'secondary';
+  variant: "primary" | "secondary";
   onClick: () => void;
   children: React.ReactNode;
 }
 
 export function Button({ variant, onClick, children }: ButtonProps) {
   return (
-    <button 
-      className={`btn btn-${variant}`}
-      onClick={onClick}
-    >
+    <button className={`btn btn-${variant}`} onClick={onClick}>
       {children}
     </button>
   );
@@ -137,12 +140,14 @@ export function Button({ variant, onClick, children }: ButtonProps) {
 ## 📋 开发环境设置
 
 1. 克隆项目：
+
    ```bash
    git clone https://github.com/your-org/suipass.git
    cd suipass
    ```
 
 2. 安装依赖：
+
    ```bash
    npm install
    ```

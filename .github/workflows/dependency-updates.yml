@@ -1,0 +1,98 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    - cron: "0 10 * * 1" # Every Monday at 10 AM UTC
+  workflow_dispatch:
+    inputs:
+      type:
+        description: "Update type"
+        required: true
+        default: "all"
+        type: choice
+        options: [all, patches, minor, major]
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    name: Update Dependencies
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm bootstrap
+
+      - name: Update dependencies
+        run: |
+          if [ "${{ github.event.inputs.type }}" = "patches" ]; then
+            pnpm update --latest
+          elif [ "${{ github.event.inputs.type }}" = "minor" ]; then
+            pnpm update --latest --filter="*"
+          elif [ "${{ github.event.inputs.type }}" = "major" ]; then
+            pnpm update --latest --filter="*"
+          else
+            pnpm update --latest
+          fi
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Run type checking
+        run: pnpm type-check
+
+      - name: Run linting
+        run: pnpm lint
+
+      - name: Create PR if changes exist
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update dependencies"
+          title: "chore: update dependencies"
+          body: |
+            ## Summary
+            Automated dependency update
+
+            ## Changes
+            - Updated dependencies to latest versions
+            - All tests passed
+            - Type checking passed
+            - Linting passed
+
+            ## Next Steps
+            - Review the changes
+            - Test thoroughly
+            - Merge if everything works correctly
+
+            🤖 Generated with [SuiPass CI](https://github.com/your-repo/suipass)
+          branch: "deps/update-dependencies"
+          delete-branch: true

@@ -9,6 +9,7 @@ SuiPass is a decentralized password manager built on Sui blockchain and Walrus s
 ## Architecture
 
 ### Monorepo Structure
+
 - **packages/frontend/** - React 18 + TypeScript frontend application
 - **packages/contracts/** - Sui Move smart contracts
 - **packages/shared/** - Shared utilities (currently empty)
@@ -16,6 +17,7 @@ SuiPass is a decentralized password manager built on Sui blockchain and Walrus s
 - **scripts/** - Build and deployment scripts
 
 ### Key Technologies
+
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Zustand, TanStack Query
 - **Blockchain**: Sui Move, @mysten/sui.js, @suiet/wallet-kit
 - **Storage**: IndexedDB (local), Walrus (decentralized)
@@ -25,6 +27,7 @@ SuiPass is a decentralized password manager built on Sui blockchain and Walrus s
 ## Development Commands
 
 ### Common Commands
+
 ```bash
 # Install all dependencies and build
 pnpm bootstrap
@@ -48,6 +51,7 @@ pnpm format        # Prettier
 ```
 
 ### Frontend Development
+
 ```bash
 cd packages/frontend
 
@@ -67,6 +71,7 @@ pnpm lint           # ESLint
 ```
 
 ### Smart Contract Development
+
 ```bash
 cd packages/contracts
 
@@ -84,7 +89,9 @@ pnpm devnet:deploy  # Deploy to devnet (skip dependency verification)
 ## Key Configuration
 
 ### Environment Variables
+
 Create `.env` in `packages/frontend/`:
+
 ```env
 VITE_SUI_NETWORK=testnet
 VITE_SUI_RPC_URL=https://sui.testnet.rpc
@@ -94,9 +101,11 @@ VITE_ENABLE_LOCAL_MODE=true
 ```
 
 ### Path Aliases
+
 - `@/*` maps to `packages/frontend/src/*`
 
 ### Sui Network Setup
+
 1. Install Sui CLI: `cargo install --git https://github.com/MystenLabs/sui --branch main sui`
 2. Start local network: `sui start`
 3. Configure wallet for testing
@@ -104,20 +113,24 @@ VITE_ENABLE_LOCAL_MODE=true
 ## Code Architecture Patterns
 
 ### Frontend State Management
+
 - Uses Zustand with persistence middleware
 - Stores in `packages/frontend/src/stores/`
 - Key stores: `auth.ts`, `vault.ts`, `password.ts`
 
 ### Service Layer
+
 - API interactions in `packages/frontend/src/services/`
 - Key services: `sui.ts` (blockchain), `encryption.ts`, `storage.ts`
 
 ### Component Structure
+
 - Reusable components in `packages/frontend/src/components/`
 - Page components in `packages/frontend/src/pages/`
 - Custom hooks in `packages/frontend/src/hooks/`
 
 ### Smart Contract Structure
+
 - Move modules in `packages/contracts/sources/`
 - Module naming: `vault.move`, `password.move`, `access_control.move`
 - Tests in `packages/contracts/tests/`
@@ -125,16 +138,19 @@ VITE_ENABLE_LOCAL_MODE=true
 ## Security Considerations
 
 ### Encryption Patterns
+
 - All sensitive data encrypted client-side using AES-256-GCM
 - Master keys derived with Argon2id
 - Never store plain text passwords or encryption keys
 
 ### Blockchain Security
+
 - Use Sui's object capabilities model
 - Implement proper access controls
 - Validate all external inputs
 
 ### Frontend Security
+
 - Content Security Policy (CSP) enabled
 - No sensitive data in localStorage
 - Sanitize all user inputs
@@ -150,12 +166,14 @@ VITE_ENABLE_LOCAL_MODE=true
 ## Testing Guidelines
 
 ### Frontend Tests
+
 - Unit tests with Vitest
 - Component tests with Testing Library
 - E2E tests with Playwright
 - Coverage threshold: 80%
 
 ### Contract Tests
+
 - Move unit tests with `#[test]` attributes
 - Integration tests with `sui move test`
 - Gas optimization checks

@@ -114,7 +114,8 @@ export class AuditService {
     // 计算各类型操作统计
     filteredLogs.forEach(log => {
       stats.actionsByType[log.action] = (stats.actionsByType[log.action] || 0) + 1;
-      stats.actionsByResource[log.resourceType] = (stats.actionsByResource[log.resourceType] || 0) + 1;
+      stats.actionsByResource[log.resourceType] =
+        (stats.actionsByResource[log.resourceType] || 0) + 1;
       stats.usersActivity[log.userId] = (stats.usersActivity[log.userId] || 0) + 1;
     });
 
@@ -125,9 +126,10 @@ export class AuditService {
     const responseTimes = filteredLogs
       .filter(log => log.metadata.duration)
       .map(log => log.metadata.duration);
-    stats.averageResponseTime = responseTimes.length > 0 
-      ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length 
-      : 0;
+    stats.averageResponseTime =
+      responseTimes.length > 0
+        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+        : 0;
 
     return stats;
   }
@@ -138,7 +140,7 @@ export class AuditService {
   async getSecurityScore(userId?: string): Promise<SecurityScore> {
     const targetUserId = userId || getCurrentUserId();
     const userLogs = await this.getUserLogs(targetUserId);
-    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
     const recentLogs = userLogs.filter(log => log.timestamp >= thirtyDaysAgo);
 
     const score = this.calculateSecurityScore(recentLogs);
@@ -166,8 +168,8 @@ export class AuditService {
     }
 
     // 检测高频失败操作
-    const recentFailures = userLogs.filter(log => 
-      !log.result && log.timestamp > Date.now() - (60 * 60 * 1000)
+    const recentFailures = userLogs.filter(
+      log => !log.result && log.timestamp > Date.now() - 60 * 60 * 1000
     );
     if (recentFailures.length > 10) {
       activities.push({
@@ -281,15 +283,15 @@ export class AuditService {
     }
 
     // 基于失败操作扣分
-    score = Math.max(0, score - (failedActions * 2));
+    score = Math.max(0, score - failedActions * 2);
 
     // 基于操作类型调整
-    const sensitiveActions = logs.filter(log => 
+    const sensitiveActions = logs.filter(log =>
       ['delete_vault', 'share_vault', 'revoke_access'].includes(log.action)
     );
     if (sensitiveActions.length > 0) {
       const sensitiveFailures = sensitiveActions.filter(log => !log.result).length;
-      score = Math.max(0, score - (sensitiveFailures * 5));
+      score = Math.max(0, score - sensitiveFailures * 5);
     }
 
     return {
@@ -311,8 +313,16 @@ export class AuditService {
 
   private convertToCSV(logs: AuditLog[]): string {
     const headers = [
-      'ID', 'User ID', 'Action', 'Resource ID', 'Resource Type', 
-      'Result', 'Error Message', 'Timestamp', 'IP Address', 'User Agent'
+      'ID',
+      'User ID',
+      'Action',
+      'Resource ID',
+      'Resource Type',
+      'Result',
+      'Error Message',
+      'Timestamp',
+      'IP Address',
+      'User Agent',
     ];
 
     const rows = logs.map(log => [

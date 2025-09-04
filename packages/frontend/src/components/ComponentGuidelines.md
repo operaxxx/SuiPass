@@ -1,11 +1,11 @@
-// React 组件开发规范
-// packages/frontend/src/components/ComponentGuidelines.md
+// React 组件开发规范 // packages/frontend/src/components/ComponentGuidelines.md
 
 # React 组件开发规范
 
 ## 1. 组件命名规范
 
 ### 1.1 文件命名
+
 - 使用 PascalCase 命名组件文件
 - 组件文件名应与组件名称一致
 - Hook 文件使用 `use` 前缀，如 `useAuth.ts`
@@ -35,6 +35,7 @@ components/
 ```
 
 ### 1.2 组件命名
+
 - 使用 PascalCase 命名组件
 - 组件名称应具有描述性
 - 避免使用过于通用的名称
@@ -55,7 +56,7 @@ export function Progress() { ... }
 
 ### 2.1 基础组件结构
 
-```typescript
+````typescript
 // packages/frontend/src/components/PasswordInput/PasswordInput.tsx
 import React, { useState, useCallback } from 'react';
 import { Eye, EyeOff, Lock } from 'lucide-react';
@@ -76,13 +77,13 @@ interface PasswordInputProps {
 
 /**
  * 密码输入组件
- * 
+ *
  * 功能：
  * - 密码输入和显示/隐藏切换
  * - 密码强度指示器
  * - 错误状态显示
  * - 无障碍支持
- * 
+ *
  * @example
  * ```tsx
  * <PasswordInput
@@ -133,7 +134,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
             error ? 'text-red-500' : isFocused ? 'text-sui-600' : 'text-gray-400'
           )} />
         </div>
-        
+
         <input
           id={id}
           name={name}
@@ -158,7 +159,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
         />
-        
+
         <button
           type="button"
           onClick={togglePasswordVisibility}
@@ -173,13 +174,13 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
           )}
         </button>
       </div>
-      
+
       {error && (
         <p id={`${id}-error`} className="mt-1 text-sm text-red-600">
           {error}
         </p>
       )}
-      
+
       {showStrengthIndicator && passwordStrength && (
         <PasswordStrengthIndicator strength={passwordStrength} />
       )}
@@ -246,7 +247,7 @@ function calculatePasswordStrength(password: string) {
 }
 
 export default PasswordInput;
-```
+````
 
 ### 2.2 组件导出规范
 
@@ -266,22 +267,22 @@ interface ComponentProps {
   id?: string;
   className?: string;
   children?: React.ReactNode;
-  
+
   // 状态属性
   disabled?: boolean;
   loading?: boolean;
   error?: string;
-  
+
   // 事件处理器
   onClick?: () => void;
   onChange?: (value: string) => void;
   onSubmit?: (data: FormData) => Promise<void>;
-  
+
   // 样式属性
   variant?: 'default' | 'outline' | 'ghost' | 'destructive';
   size?: 'sm' | 'md' | 'lg';
   color?: 'primary' | 'secondary' | 'success' | 'error';
-  
+
   // 自定义渲染
   renderIcon?: (props: IconProps) => React.ReactNode;
   renderError?: (error: string) => React.ReactNode;
@@ -340,27 +341,31 @@ export function useAuth(): UseAuthReturn {
 
   const isAuthenticated = !!user;
 
-  const login = useCallback(async (credentials: LoginCredentials) => {
-    setIsLoading(true);
-    try {
-      const user = await authService.login(credentials);
-      setUser(user);
-      toast({
-        title: '登录成功',
-        description: '欢迎回来！',
-      });
-      navigate({ to: '/dashboard' });
-    } catch (error) {
-      toast({
-        title: '登录失败',
-        description: error instanceof Error ? error.message : '请检查您的凭据',
-        variant: 'destructive',
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [authService, navigate, toast]);
+  const login = useCallback(
+    async (credentials: LoginCredentials) => {
+      setIsLoading(true);
+      try {
+        const user = await authService.login(credentials);
+        setUser(user);
+        toast({
+          title: '登录成功',
+          description: '欢迎回来！',
+        });
+        navigate({ to: '/dashboard' });
+      } catch (error) {
+        toast({
+          title: '登录失败',
+          description:
+            error instanceof Error ? error.message : '请检查您的凭据',
+          variant: 'destructive',
+        });
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [authService, navigate, toast]
+  );
 
   const logout = useCallback(async () => {
     setIsLoading(true);
@@ -417,7 +422,8 @@ export function useAuth(): UseAuthReturn {
       } catch (error) {
         toast({
           title: '注册失败',
-          description: error instanceof Error ? error.message : '注册时发生错误',
+          description:
+            error instanceof Error ? error.message : '注册时发生错误',
           variant: 'destructive',
         });
         throw error;
@@ -427,7 +433,7 @@ export function useAuth(): UseAuthReturn {
     },
     updateProfile: async (data: Partial<User>) => {
       if (!user) throw new Error('用户未登录');
-      
+
       setIsLoading(true);
       try {
         const updatedUser = await authService.updateProfile(user.id, data);
@@ -439,7 +445,8 @@ export function useAuth(): UseAuthReturn {
       } catch (error) {
         toast({
           title: '更新失败',
-          description: error instanceof Error ? error.message : '更新时发生错误',
+          description:
+            error instanceof Error ? error.message : '更新时发生错误',
           variant: 'destructive',
         });
         throw error;
@@ -488,18 +495,23 @@ interface VaultState {
   currentVault: Vault | null;
   isLoading: boolean;
   error: string | null;
-  
+
   // 操作
   createVault: (name: string, masterPassword: string) => Promise<void>;
   updateVault: (vaultId: string, updates: Partial<Vault>) => Promise<void>;
   deleteVault: (vaultId: string) => Promise<void>;
   setCurrentVault: (vault: Vault | null) => void;
-  
+
   // 密码管理
-  addPassword: (password: Omit<PasswordItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updatePassword: (passwordId: string, updates: Partial<PasswordItem>) => Promise<void>;
+  addPassword: (
+    password: Omit<PasswordItem, 'id' | 'createdAt' | 'updatedAt'>
+  ) => Promise<void>;
+  updatePassword: (
+    passwordId: string,
+    updates: Partial<PasswordItem>
+  ) => Promise<void>;
   deletePassword: (passwordId: string) => Promise<void>;
-  
+
   // 工具方法
   clearError: () => void;
   refreshVaults: () => Promise<void>;
@@ -518,29 +530,29 @@ export const useVaultStore = create<VaultState>()(
         // 创建保险库
         createVault: async (name: string, masterPassword: string) => {
           set({ isLoading: true, error: null });
-          
+
           try {
             const vaultService = new VaultService();
             const encryptionService = new EncryptionService();
-            
+
             const vault = await vaultService.createVault(name, masterPassword);
-            
-            set((state) => {
+
+            set(state => {
               state.vaults.push(vault);
               state.currentVault = vault;
               state.isLoading = false;
             });
           } catch (error) {
-            set({ 
+            set({
               error: error instanceof Error ? error.message : '创建保险库失败',
-              isLoading: false 
+              isLoading: false,
             });
             throw error;
           }
         },
 
         // 添加密码
-        addPassword: async (passwordData) => {
+        addPassword: async passwordData => {
           const state = get();
           if (!state.currentVault) {
             throw new Error('请先选择一个保险库');
@@ -555,7 +567,7 @@ export const useVaultStore = create<VaultState>()(
               passwordData
             );
 
-            set((state) => {
+            set(state => {
               if (state.currentVault) {
                 state.currentVault.items.push(newPassword);
                 state.currentVault.updatedAt = Date.now();
@@ -563,9 +575,9 @@ export const useVaultStore = create<VaultState>()(
               state.isLoading = false;
             });
           } catch (error) {
-            set({ 
+            set({
               error: error instanceof Error ? error.message : '添加密码失败',
-              isLoading: false 
+              isLoading: false,
             });
             throw error;
           }
@@ -577,16 +589,17 @@ export const useVaultStore = create<VaultState>()(
         // 刷新保险库列表
         refreshVaults: async () => {
           set({ isLoading: true, error: null });
-          
+
           try {
             const vaultService = new VaultService();
             const vaults = await vaultService.getVaults();
-            
+
             set({ vaults, isLoading: false });
           } catch (error) {
-            set({ 
-              error: error instanceof Error ? error.message : '获取保险库列表失败',
-              isLoading: false 
+            set({
+              error:
+                error instanceof Error ? error.message : '获取保险库列表失败',
+              isLoading: false,
             });
             throw error;
           }
@@ -595,7 +608,7 @@ export const useVaultStore = create<VaultState>()(
       {
         name: 'vault-storage',
         storage: createJSONStorage(() => localStorage),
-        partialize: (state) => ({
+        partialize: state => ({
           vaults: state.vaults,
           currentVault: state.currentVault,
         }),
@@ -631,7 +644,7 @@ export const PasswordList = memo<PasswordListProps>(({
   // 使用 useMemo 缓存计算结果
   const filteredPasswords = useMemo(() => {
     if (!searchQuery) return passwords;
-    
+
     const query = searchQuery.toLowerCase();
     return passwords.filter(password =>
       password.title.toLowerCase().includes(query) ||
@@ -698,7 +711,12 @@ PasswordList.displayName = 'PasswordList';
 ### 6.2 数据获取优化
 
 ```typescript
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { VaultService } from '@/services/vault';
 
 // 使用 React Query 优化数据获取
@@ -717,9 +735,10 @@ export function useVaults() {
 export function usePasswords(vaultId: string) {
   return useInfiniteQuery({
     queryKey: ['vaults', vaultId, 'passwords'],
-    queryFn: ({ pageParam = 1 }) => 
+    queryFn: ({ pageParam = 1 }) =>
       new VaultService().getPasswords(vaultId, pageParam),
-    getNextPageParam: (lastPage) => lastPage.hasNextPage ? lastPage.currentPage + 1 : undefined,
+    getNextPageParam: lastPage =>
+      lastPage.hasNextPage ? lastPage.currentPage + 1 : undefined,
     staleTime: 1 * 60 * 1000, // 1分钟
   });
 }
@@ -727,7 +746,7 @@ export function usePasswords(vaultId: string) {
 // 使用 mutation 处理数据变更
 export function useCreatePassword(vaultId: string) {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (passwordData: CreatePasswordData) =>
       new VaultService().createPassword(vaultId, passwordData),
@@ -787,7 +806,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
     // 调用自定义错误处理器
     this.props.onError?.(error, errorInfo);
-    
+
     // 可以在这里添加错误上报逻辑
     console.error('ErrorBoundary caught an error:', error, errorInfo);
   }
@@ -814,15 +833,15 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="flex justify-center mb-4">
               <AlertTriangle className="h-12 w-12 text-red-500" />
             </div>
-            
+
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
               出现了错误
             </h1>
-            
+
             <p className="text-gray-600 mb-6">
               应用程序遇到了一个意外错误。请尝试刷新页面或联系支持。
             </p>
-            
+
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="text-left mb-6">
                 <summary className="cursor-pointer text-sm text-gray-700 mb-2">
@@ -843,16 +862,16 @@ export class ErrorBoundary extends Component<Props, State> {
                 </div>
               </details>
             )}
-            
+
             <div className="space-y-2">
               <Button onClick={this.handleReset} className="w-full">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 重试
               </Button>
-              
-              <Button 
-                variant="outline" 
-                onClick={() => window.location.reload()} 
+
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
                 className="w-full"
               >
                 刷新页面
@@ -870,7 +889,7 @@ export class ErrorBoundary extends Component<Props, State> {
 // Hook 版本的错误边界
 export function useErrorBoundary() {
   const [error, setError] = React.useState<Error | null>(null);
-  
+
   const resetError = React.useCallback(() => {
     setError(null);
   }, []);
@@ -927,7 +946,8 @@ export function useAsync<T>() {
       });
       return data;
     } catch (error) {
-      const errorObj = error instanceof Error ? error : new Error('Unknown error');
+      const errorObj =
+        error instanceof Error ? error : new Error('Unknown error');
       setState({
         data: null,
         error: errorObj,
@@ -977,7 +997,7 @@ describe('PasswordInput', () => {
 
   it('renders correctly with default props', () => {
     render(<PasswordInput value="" onChange={mockOnChange} />);
-    
+
     const input = screen.getByRole('textbox', { name: /输入密码/i });
     expect(input).toBeInTheDocument();
     expect(input).toHaveAttribute('type', 'password');
@@ -986,74 +1006,74 @@ describe('PasswordInput', () => {
   it('calls onChange when input value changes', async () => {
     const user = userEvent.setup();
     render(<PasswordInput value="" onChange={mockOnChange} />);
-    
+
     const input = screen.getByRole('textbox', { name: /输入密码/i });
     await user.type(input, 'testpassword');
-    
+
     expect(mockOnChange).toHaveBeenCalledWith('testpassword');
   });
 
   it('toggles password visibility when eye button is clicked', async () => {
     const user = userEvent.setup();
     render(<PasswordInput value="password" onChange={mockOnChange} />);
-    
+
     const input = screen.getByRole('textbox', { name: /输入密码/i });
     const toggleButton = screen.getByRole('button', { name: /显示密码/i });
-    
+
     expect(input).toHaveAttribute('type', 'password');
-    
+
     await user.click(toggleButton);
     expect(input).toHaveAttribute('type', 'text');
-    
+
     await user.click(toggleButton);
     expect(input).toHaveAttribute('type', 'password');
   });
 
   it('shows error message when error prop is provided', () => {
     render(
-      <PasswordInput 
-        value="" 
-        onChange={mockOnChange} 
-        error="密码不能为空" 
+      <PasswordInput
+        value=""
+        onChange={mockOnChange}
+        error="密码不能为空"
       />
     );
-    
+
     expect(screen.getByText('密码不能为空')).toBeInTheDocument();
   });
 
   it('disables input when disabled prop is true', () => {
     render(<PasswordInput value="" onChange={mockOnChange} disabled />);
-    
+
     const input = screen.getByRole('textbox', { name: /输入密码/i });
     expect(input).toBeDisabled();
   });
 
   it('shows password strength indicator when enabled', () => {
     render(
-      <PasswordInput 
-        value="weak" 
-        onChange={mockOnChange} 
-        showStrengthIndicator 
+      <PasswordInput
+        value="weak"
+        onChange={mockOnChange}
+        showStrengthIndicator
       />
     );
-    
+
     expect(screen.getByText(/添加特殊字符以增加强度/i)).toBeInTheDocument();
   });
 
   it('has proper accessibility attributes', () => {
     render(
-      <PasswordInput 
-        value="" 
-        onChange={mockOnChange} 
-        error="Invalid password" 
+      <PasswordInput
+        value=""
+        onChange={mockOnChange}
+        error="Invalid password"
         id="password-input"
       />
     );
-    
+
     const input = screen.getByRole('textbox');
     expect(input).toHaveAttribute('aria-invalid', 'true');
     expect(input).toHaveAttribute('aria-describedby', 'password-input-error');
-    
+
     const errorMessage = screen.getByText('Invalid password');
     expect(errorMessage).toHaveAttribute('id', 'password-input-error');
   });

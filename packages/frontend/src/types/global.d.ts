@@ -16,7 +16,9 @@ declare module 'argon2-browser' {
     encoded: string;
   }>;
 
-  export function verify(options: Argon2Options & { pass: string; encoded: string }): Promise<boolean>;
+  export function verify(
+    options: Argon2Options & { pass: string; encoded: string }
+  ): Promise<boolean>;
 }
 
 // Process type definitions for browser environment

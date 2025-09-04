@@ -9,7 +9,7 @@ import '@testing-library/jest-dom/vitest';
 beforeEach(() => {
   // 清除所有模拟
   vi.clearAllMocks();
-  
+
   // 设置测试环境
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
@@ -119,24 +119,24 @@ beforeEach(() => {
   window.scrollTo = vi.fn();
 
   // 模拟 requestAnimationFrame
-  global.requestAnimationFrame = vi.fn((callback) => {
+  global.requestAnimationFrame = vi.fn(callback => {
     return setTimeout(callback, 0);
   });
 
   // 模拟 cancelAnimationFrame
-  global.cancelAnimationFrame = vi.fn((id) => {
+  global.cancelAnimationFrame = vi.fn(id => {
     clearTimeout(id);
   });
 
   // 模拟 setTimeout 和 clearTimeout
-  global.setTimeout = vi.fn((callback) => {
+  global.setTimeout = vi.fn(callback => {
     return setTimeout(callback, 0);
   });
 
   global.clearTimeout = vi.fn(clearTimeout);
 
   // 模拟 setInterval 和 clearInterval
-  global.setInterval = vi.fn((callback) => {
+  global.setInterval = vi.fn(callback => {
     return setInterval(callback, 0);
   });
 
@@ -164,10 +164,10 @@ beforeEach(() => {
 afterEach(() => {
   // 清理测试环境
   cleanup();
-  
+
   // 清除定时器
   vi.clearAllTimers();
-  
+
   // 清理模拟调用
   vi.clearAllMocks();
 });
@@ -185,19 +185,17 @@ expect.extend({
     const pass = received >= floor && received <= ceiling;
     if (pass) {
       return {
-        message: () =>
-          `expected ${received} not to be within range ${floor} - ${ceiling}`,
+        message: () => `expected ${received} not to be within range ${floor} - ${ceiling}`,
         pass: true,
       };
     } else {
       return {
-        message: () =>
-          `expected ${received} to be within range ${floor} - ${ceiling}`,
+        message: () => `expected ${received} to be within range ${floor} - ${ceiling}`,
         pass: false,
       };
     }
   },
-  
+
   toBeValidEmail(received: string) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const pass = emailRegex.test(received);
@@ -213,7 +211,7 @@ expect.extend({
       };
     }
   },
-  
+
   toBeValidUUID(received: string) {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     const pass = uuidRegex.test(received);
@@ -299,7 +297,7 @@ export const createMockUser = (overrides = {}) => ({
 export const waitForAsync = async (callback: () => Promise<void> | void, timeout = 5000) => {
   return new Promise<void>((resolve, reject) => {
     const startTime = Date.now();
-    
+
     const check = async () => {
       try {
         await callback();
@@ -312,7 +310,7 @@ export const waitForAsync = async (callback: () => Promise<void> | void, timeout
         }
       }
     };
-    
+
     check();
   });
 };
@@ -336,11 +334,7 @@ export const createMockEvent = (type: string, overrides = {}) => ({
 });
 
 // 模拟 API 响应
-export const createMockResponse = <T = any>(
-  data: T,
-  status = 200,
-  statusText = 'OK'
-): Response => {
+export const createMockResponse = <T = any>(data: T, status = 200, statusText = 'OK'): Response => {
   return {
     ok: status >= 200 && status < 300,
     status,

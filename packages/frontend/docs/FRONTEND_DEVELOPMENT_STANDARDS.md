@@ -14,6 +14,7 @@
 ### 1.1 ESLint配置
 
 #### 核心插件
+
 - **@typescript-eslint**: TypeScript语法检查
 - **eslint-plugin-react**: React语法检查
 - **eslint-plugin-react-hooks**: React Hooks检查
@@ -24,6 +25,7 @@
 - **eslint-plugin-sonarjs**: 代码复杂度检查
 
 #### 关键规则
+
 ```typescript
 // TypeScript 规则
 "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
@@ -50,6 +52,7 @@
 ### 1.2 Prettier格式化
 
 #### 配置文件 (`.prettierrc`)
+
 ```json
 {
   "semi": true,
@@ -67,6 +70,7 @@
 ### 1.3 Husky和lint-staged
 
 #### 提交前检查
+
 ```bash
 #!/bin/bash
 echo "🔍 Running pre-commit checks..."
@@ -86,21 +90,18 @@ echo "✅ All checks passed!"
 ```
 
 #### Lint-staged配置
+
 ```json
 {
-  "*.{js,jsx,ts,tsx}": [
-    "eslint --fix",
-    "prettier --write"
-  ],
-  "*.{json,md,yml,yaml}": [
-    "prettier --write"
-  ]
+  "*.{js,jsx,ts,tsx}": ["eslint --fix", "prettier --write"],
+  "*.{json,md,yml,yaml}": ["prettier --write"]
 }
 ```
 
 ### 1.4 提交信息规范
 
 #### 提交类型
+
 - `feat`: 新功能
 - `fix`: 修复bug
 - `docs`: 文档更新
@@ -112,6 +113,7 @@ echo "✅ All checks passed!"
 - `security`: 安全相关
 
 #### 提交格式
+
 ```
 <type>(<scope>): <subject>
 
@@ -121,6 +123,7 @@ echo "✅ All checks passed!"
 ```
 
 示例：
+
 ```
 feat(auth): add biometric authentication support
 
@@ -136,6 +139,7 @@ Closes #123
 ### 2.1 类型定义原则
 
 #### 基础类型
+
 ```typescript
 // ✅ 推荐使用明确的类型
 interface User {
@@ -154,6 +158,7 @@ interface UserData {
 ```
 
 #### 工具类型
+
 ```typescript
 // 深度部分类型
 type DeepPartial<T> = {
@@ -170,6 +175,7 @@ type NonNullable<T> = T extends null | undefined ? never : T;
 ### 2.2 接口设计原则
 
 #### 响应类型
+
 ```typescript
 interface ApiResponse<T = unknown> {
   success: boolean;
@@ -189,6 +195,7 @@ interface PaginatedResponse<T> {
 ```
 
 #### 错误类型
+
 ```typescript
 interface AppError {
   code: string;
@@ -202,6 +209,7 @@ interface AppError {
 ### 2.3 错误处理规范
 
 #### 异步错误处理
+
 ```typescript
 // ✅ 正确的异步错误处理
 async function fetchUserData(userId: string): Promise<User> {
@@ -225,6 +233,7 @@ async function fetchUserData(userId: string) {
 ```
 
 #### 类型守卫
+
 ```typescript
 // 类型守卫函数
 function isUser(obj: unknown): obj is User {
@@ -248,6 +257,7 @@ function processUserData(data: unknown) {
 ### 2.4 异步编程规范
 
 #### Promise使用
+
 ```typescript
 // ✅ 使用async/await
 async function processItems(items: Item[]): Promise<void> {
@@ -275,6 +285,7 @@ async function processItemsParallel(items: Item[]): Promise<void> {
 ### 3.1 组件命名和结构
 
 #### 文件命名
+
 ```
 components/
 ├── PasswordInput/
@@ -290,6 +301,7 @@ components/
 ```
 
 #### 组件结构
+
 ```typescript
 // ✅ 标准组件结构
 interface PasswordInputProps {
@@ -308,7 +320,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
   error,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
   }, [onChange]);
@@ -332,12 +344,13 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
 ### 3.2 Hooks使用规范
 
 #### 自定义Hook设计
+
 ```typescript
 // ✅ 标准Hook设计
 function useAuth(): UseAuthReturn {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const login = useCallback(async (credentials: LoginCredentials) => {
     setIsLoading(true);
     try {
@@ -370,6 +383,7 @@ function useAuth(): UseAuthReturn {
 ```
 
 #### Hook使用规则
+
 ```typescript
 // ✅ 正确使用
 function MyComponent() {
@@ -393,6 +407,7 @@ function MyComponent({ items }) {
 ### 3.3 状态管理规范
 
 #### Zustand Store设计
+
 ```typescript
 interface VaultState {
   vaults: Vault[];
@@ -416,7 +431,7 @@ export const useVaultStore = create<VaultState>()(
           set({ isLoading: true, error: null });
           try {
             const vault = await vaultService.createVault(name, masterPassword);
-            set((state) => {
+            set(state => {
               state.vaults.push(vault);
               state.currentVault = vault;
               state.isLoading = false;
@@ -429,7 +444,7 @@ export const useVaultStore = create<VaultState>()(
       })),
       {
         name: 'vault-storage',
-        partialize: (state) => ({
+        partialize: state => ({
           vaults: state.vaults,
           currentVault: state.currentVault,
         }),
@@ -442,13 +457,14 @@ export const useVaultStore = create<VaultState>()(
 ### 3.4 性能优化规范
 
 #### 组件优化
+
 ```typescript
 // ✅ 使用memo优化组件
 export const PasswordList = memo<PasswordListProps>(({ passwords, onSelect }) => {
   return (
     <div className="password-list">
       {passwords.map(password => (
-        <PasswordItem 
+        <PasswordItem
           key={password.id}
           password={password}
           onSelect={onSelect}
@@ -470,6 +486,7 @@ function useFilteredPasswords(passwords: Password[], query: string) {
 ```
 
 #### 数据获取优化
+
 ```typescript
 // ✅ 使用React Query
 export function useVaults() {
@@ -487,12 +504,13 @@ export function useVaults() {
 ### 4.1 加密安全
 
 #### 密钥管理
+
 ```typescript
 // ✅ 安全的密钥派生
 class EncryptionService {
   async deriveKey(password: string, salt?: Uint8Array): Promise<CryptoKey> {
     const keySalt = salt || crypto.getRandomValues(new Uint8Array(16));
-    
+
     // 使用Argon2id进行密钥派生
     const derivedKey = await argon2.hash({
       pass: password,
@@ -516,6 +534,7 @@ class EncryptionService {
 ```
 
 #### 敏感数据处理
+
 ```typescript
 // ✅ 安全的数据清除
 async function clearSensitiveData(...data: Uint8Array[]): Promise<void> {
@@ -535,9 +554,13 @@ async function clearSensitiveData(...data: Uint8Array[]): Promise<void> {
 ### 4.2 输入验证
 
 #### 输入清理
+
 ```typescript
 // ✅ 输入验证函数
-export function validateInput(input: string, context: string = 'default'): boolean {
+export function validateInput(
+  input: string,
+  context: string = 'default'
+): boolean {
   if (!input || typeof input !== 'string') {
     return false;
   }
@@ -565,6 +588,7 @@ export function validateInput(input: string, context: string = 'default'): boole
 ```
 
 #### 内容安全策略
+
 ```typescript
 export const cspConfig = {
   'default-src': ["'self'"],
@@ -588,6 +612,7 @@ export const cspConfig = {
 ### 4.3 密码安全
 
 #### 密码策略
+
 ```typescript
 export const passwordPolicy = {
   minLength: 8,
@@ -604,6 +629,7 @@ export const passwordPolicy = {
 ```
 
 #### 密码强度验证
+
 ```typescript
 export function validatePasswordStrength(password: string): {
   isValid: boolean;
@@ -646,6 +672,7 @@ export function validatePasswordStrength(password: string): {
 ### 5.1 单元测试规范
 
 #### 测试文件命名
+
 ```
 services/
 ├── encryption.ts
@@ -660,6 +687,7 @@ components/
 ```
 
 #### 测试结构
+
 ```typescript
 describe('EncryptionService', () => {
   let encryptionService: EncryptionService;
@@ -700,6 +728,7 @@ describe('EncryptionService', () => {
 ### 5.2 组件测试规范
 
 #### 组件测试示例
+
 ```typescript
 describe('PasswordInput', () => {
   const mockOnChange = vi.fn();
@@ -710,29 +739,29 @@ describe('PasswordInput', () => {
 
   it('renders correctly', () => {
     render(<PasswordInput value="" onChange={mockOnChange} />);
-    
+
     expect(screen.getByRole('textbox')).toBeInTheDocument();
   });
 
   it('calls onChange when input changes', async () => {
     const user = userEvent.setup();
     render(<PasswordInput value="" onChange={mockOnChange} />);
-    
+
     const input = screen.getByRole('textbox');
     await user.type(input, 'test');
-    
+
     expect(mockOnChange).toHaveBeenCalledWith('test');
   });
 
   it('shows error message', () => {
     render(
-      <PasswordInput 
-        value="" 
-        onChange={mockOnChange} 
-        error="Password is required" 
+      <PasswordInput
+        value=""
+        onChange={mockOnChange}
+        error="Password is required"
       />
     );
-    
+
     expect(screen.getByText('Password is required')).toBeInTheDocument();
   });
 });
@@ -741,28 +770,33 @@ describe('PasswordInput', () => {
 ### 5.3 E2E测试规范
 
 #### E2E测试示例
+
 ```typescript
 import { test, expect } from '@playwright/test';
 
 test.describe('Authentication', () => {
   test('should login successfully', async ({ page }) => {
     await page.goto('/login');
-    
+
     await page.fill('[data-testid="email"]', 'test@example.com');
     await page.fill('[data-testid="password"]', 'password123');
     await page.click('[data-testid="login-button"]');
-    
+
     await expect(page).toHaveURL('/dashboard');
     await expect(page.locator('[data-testid="user-menu"]')).toBeVisible();
   });
 
   test('should show validation errors', async ({ page }) => {
     await page.goto('/login');
-    
+
     await page.click('[data-testid="login-button"]');
-    
-    await expect(page.locator('[data-testid="email-error"]')).toContainText('Email is required');
-    await expect(page.locator('[data-testid="password-error"]')).toContainText('Password is required');
+
+    await expect(page.locator('[data-testid="email-error"]')).toContainText(
+      'Email is required'
+    );
+    await expect(page.locator('[data-testid="password-error"]')).toContainText(
+      'Password is required'
+    );
   });
 });
 ```
@@ -770,12 +804,14 @@ test.describe('Authentication', () => {
 ### 5.4 测试覆盖率要求
 
 #### 覆盖率标准
+
 - **行覆盖率**: ≥ 80%
 - **分支覆盖率**: ≥ 80%
 - **函数覆盖率**: ≥ 80%
 - **语句覆盖率**: ≥ 80%
 
 #### 关键文件覆盖率
+
 - **加密服务**: ≥ 90%
 - **认证服务**: ≥ 90%
 - **安全相关组件**: ≥ 95%
@@ -786,16 +822,17 @@ test.describe('Authentication', () => {
 ### 6.1 代码注释规范
 
 #### JSDoc注释
-```typescript
+
+````typescript
 /**
  * 加密数据
- * 
+ *
  * @param data - 要加密的数据
  * @param password - 加密密码
  * @param context - 可选的上下文信息
  * @returns 加密结果
  * @throws {Error} 当加密失败时抛出错误
- * 
+ *
  * @example
  * ```typescript
  * const data = new TextEncoder().encode('secret');
@@ -809,19 +846,20 @@ export async function encrypt(
 ): Promise<EncryptedData> {
   // 实现加密逻辑
 }
-```
+````
 
 #### 组件注释
-```typescript
+
+````typescript
 /**
  * 密码输入组件
- * 
+ *
  * 功能：
  * - 密码输入和显示/隐藏切换
  * - 密码强度指示器
  * - 错误状态显示
  * - 无障碍支持
- * 
+ *
  * @example
  * ```tsx
  * <PasswordInput
@@ -835,12 +873,13 @@ export async function encrypt(
 export const PasswordInput: React.FC<PasswordInputProps> = ({ ... }) => {
   // 组件实现
 };
-```
+````
 
 ### 6.2 组件文档规范
 
 #### 组件文档结构
-```markdown
+
+````markdown
 # PasswordInput
 
 密码输入组件，提供安全的密码输入和验证功能。
@@ -855,14 +894,14 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({ ... }) => {
 
 ## Props
 
-| 属性 | 类型 | 默认值 | 描述 |
-|------|------|--------|------|
-| value | string | - | 密码值 |
-| onChange | (value: string) => void | - | 值变化回调 |
-| placeholder | string | "输入密码" | 占位符文本 |
-| disabled | boolean | false | 是否禁用 |
-| error | string | - | 错误信息 |
-| showStrengthIndicator | boolean | false | 是否显示强度指示器 |
+| 属性                  | 类型                    | 默认值     | 描述               |
+| --------------------- | ----------------------- | ---------- | ------------------ |
+| value                 | string                  | -          | 密码值             |
+| onChange              | (value: string) => void | -          | 值变化回调         |
+| placeholder           | string                  | "输入密码" | 占位符文本         |
+| disabled              | boolean                 | false      | 是否禁用           |
+| error                 | string                  | -          | 错误信息           |
+| showStrengthIndicator | boolean                 | false      | 是否显示强度指示器 |
 
 ## 使用示例
 
@@ -871,7 +910,7 @@ import { PasswordInput } from '@/components/ui/password-input';
 
 function LoginForm() {
   const [password, setPassword] = useState('');
-  
+
   return (
     <PasswordInput
       value={password}
@@ -882,13 +921,15 @@ function LoginForm() {
   );
 }
 ```
+````
 
 ## 无障碍
 
 - 支持屏幕阅读器
 - 键盘导航支持
 - ARIA属性完整
-```
+
+````
 
 ### 6.3 API文档规范
 
@@ -915,21 +956,24 @@ function LoginForm() {
 ```typescript
 const data = new TextEncoder().encode('secret');
 const encrypted = await encryptionService.encrypt(data, 'password');
-```
+````
 
 ### decrypt(encryptedData, password)
 
 解密加密数据。
 
 **参数:**
+
 - `encryptedData: EncryptedData` - 加密数据
 - `password: string` - 解密密码
 
 **返回值:** `Promise<Uint8Array>`
 
 **错误:**
+
 - `Error` - 当解密失败时抛出
-```
+
+````
 
 ### 6.4 变更日志规范
 
@@ -961,7 +1005,7 @@ const encrypted = await encryptionService.encrypt(data, 'password');
 - 项目初始化
 - 基础项目结构
 - 开发环境配置
-```
+````
 
 ## 总结
 
