@@ -371,7 +371,7 @@ export class WalrusStorageService {
   constructor() {
     this.client = new WalrusClient({
       network: process.env.VITE_WALRUS_NETWORK || 'testnet',
-      rpcUrl: process.env.VITE_WALRUS_RPC_URL,
+      url: process.env.VITE_WALRUS_RPC_URL,
     });
     this.encryption = new EncryptionService();
     this.cache = new CacheService();
@@ -852,15 +852,23 @@ graph TB
 | 状态管理 | Zustand | 轻量级，性能好 |
 | 样式方案 | Tailwind CSS | 快速开发，一致性 |
 | 测试框架 | Vitest + Playwright | 快速测试，E2E覆盖 |
-| 区块链 | Sui + @mysten/sui.js | 官方支持，功能完整 |
-| 存储 | Walrus + IndexedDB | 去中心化，离线支持 |
+| 区块链 | Sui + @mysten/sui.js v0.54.1 | 官方支持，功能完整 |
+| 存储 | Walrus v0.6.7 + IndexedDB | 去中心化，离线支持 |
 | 加密 | Web Crypto API | 原生支持，安全性高 |
 
 这个前端架构设计为 SuiPass 项目提供了完整的技术解决方案，既满足了黑客松的演示需求，又为未来的商业化发展奠定了坚实基础。
 
 ---
 
-**文档版本**: v1.0  
+**文档版本**: v1.1  
 **创建日期**: 2025年9月  
-**最后更新**: 2025年9月  
-**维护者**: SuiPass开发团队
+**最后更新**: 2025年9月4日  
+**维护者**: SuiPass开发团队  
+
+### 🔄 依赖升级记录
+
+- **2025年9月4日**: 升级 @mysten/sui.js 从 0.50.1 到 0.54.1
+- **2025年9月4日**: 升级 @mysten/walrus 从 0.1.8 到 0.6.7
+- **API变更**: WalrusClient 配置参数从 `rpcUrl` 改为 `url`
+- **API变更**: 上传API参数从 `data` 改为 `blobBytes`
+- **API变更**: 下载API返回从 `blob.data` 改为 `blob.blobBytes`
