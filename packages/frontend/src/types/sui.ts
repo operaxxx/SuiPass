@@ -11,6 +11,51 @@ export interface SuiTransactionResponse {
   timestamp: number;
 }
 
+export interface VaultInfo {
+  id: string;
+  owner: string;
+  name: string;
+  walrusBlobId: string;
+  version: number;
+  createdAt: number;
+  updatedAt: number;
+  settings: {
+    autoLockTimeout: number;
+    maxItems: number;
+    enableSharing: boolean;
+    require2fa: boolean;
+    backupEnabled: boolean;
+  };
+}
+
+export interface VaultEvent {
+  type: 'created' | 'updated' | 'shared' | 'revoked';
+  vaultId: string;
+  timestamp: number;
+  [key: string]: any;
+}
+
+export interface NetworkInfo {
+  network: string;
+  checkpoint: number;
+  protocolVersion: number;
+  chainId: string;
+  systemStateVersion: number;
+}
+
+export interface PermissionCapability {
+  id: string;
+  vaultId: string;
+  grantedTo: string;
+  grantedBy: string;
+  permissions: number;
+  expiresAt: number;
+  usageCount: number;
+  maxUsage: number;
+  conditions: string[];
+  createdAt: number;
+}
+
 export interface SuiObjectRef {
   reference: {
     objectId: string;

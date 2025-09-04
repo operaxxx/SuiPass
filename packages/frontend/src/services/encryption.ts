@@ -76,9 +76,15 @@ export class EncryptionService {
       }
       
       // 3. 准备数据
-      const ciphertext = new Uint8Array(encryptedData.ciphertext);
-      const iv = new Uint8Array(encryptedData.iv);
-      const tag = new Uint8Array(encryptedData.tag);
+      const ciphertext = encryptedData.ciphertext instanceof Uint8Array 
+        ? encryptedData.ciphertext 
+        : new Uint8Array(encryptedData.ciphertext);
+      const iv = encryptedData.iv instanceof Uint8Array 
+        ? encryptedData.iv 
+        : new Uint8Array(encryptedData.iv);
+      const tag = encryptedData.tag instanceof Uint8Array 
+        ? encryptedData.tag 
+        : new Uint8Array(encryptedData.tag);
       
       // 4. 合并密文和标签
       const encryptedWithTag = new Uint8Array(ciphertext.length + tag.length);
@@ -108,26 +114,22 @@ export class EncryptionService {
    */
   private async deriveEncryptionKey(masterPassword: string): Promise<CryptoKey> {
     try {
-      // 1. 将主密码转换为字节数组
-      const passwordEncoder = new TextEncoder();
-      const passwordData = passwordEncoder.encode(masterPassword);
-      
-      // 2. 生成盐值
+      // 1. 生成盐值
       const salt = crypto.getRandomValues(new Uint8Array(this.saltLength));
       
-      // 3. 使用 Argon2id 派生密钥
+      // 2. 使用 Argon2id 派生密钥
       const derivedKey = await argon2.hash({
         pass: masterPassword,
         salt: Array.from(salt),
-        type: argon2.ArgonType.Argon2id,
+        type: 2, // Argon2id
         mem: 65536, // 64MB memory
         time: 3,    // 3 iterations
         parallelism: 1,
         hashLen: this.keyLength / 8, // 32 bytes
       });
       
-      // 4. 将派生密钥导入为 CryptoKey
-      const rawKey = new Uint8Array(derivedKey.hash);
+      // 3. 将派生密钥导入为 CryptoKey
+      const rawKey = new Uint8Array(derivedKey.hashBytes);
       return crypto.subtle.importKey(
         'raw',
         rawKey,

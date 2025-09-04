@@ -158,7 +158,7 @@ export const useVaultStore = create<VaultState>()(
             metadata: { name, blobId },
           });
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({ error: error instanceof Error ? error.message : 'Unknown error', isLoading: false });
           throw error;
         }
       },
@@ -192,7 +192,7 @@ export const useVaultStore = create<VaultState>()(
             isLoading: false,
           }));
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({ error: error instanceof Error ? error.message : 'Unknown error', isLoading: false });
           throw error;
         }
       },
@@ -227,7 +227,7 @@ export const useVaultStore = create<VaultState>()(
             success: true,
           });
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({ error: error instanceof Error ? error.message : 'Unknown error', isLoading: false });
           throw error;
         }
       },
@@ -251,7 +251,7 @@ export const useVaultStore = create<VaultState>()(
             isLoading: false,
           });
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({ error: error instanceof Error ? error.message : 'Unknown error', isLoading: false });
           throw error;
         }
       },
@@ -269,7 +269,7 @@ export const useVaultStore = create<VaultState>()(
             isLoading: false,
           });
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({ error: error instanceof Error ? error.message : 'Unknown error', isLoading: false });
           throw error;
         }
       },
@@ -287,7 +287,6 @@ export const useVaultStore = create<VaultState>()(
             id: crypto.randomUUID(),
             created_at: Date.now(),
             updated_at: Date.now(),
-            password_strength: encryptionService.calculatePasswordScore(passwordData.password),
           };
 
           const updatedVault = {
@@ -463,7 +462,7 @@ export const useVaultStore = create<VaultState>()(
             isLoading: false,
           }));
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({ error: error instanceof Error ? error.message : 'Unknown error', isLoading: false });
           throw error;
         }
       },
@@ -480,7 +479,7 @@ export const useVaultStore = create<VaultState>()(
             isLoading: false,
           }));
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({ error: error instanceof Error ? error.message : 'Unknown error', isLoading: false });
           throw error;
         }
       },
@@ -498,7 +497,7 @@ export const useVaultStore = create<VaultState>()(
             isLoading: false,
           });
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({ error: error instanceof Error ? error.message : 'Unknown error', isLoading: false });
           throw error;
         }
       },

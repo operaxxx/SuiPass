@@ -13,6 +13,10 @@ export interface Vault {
   blob_id?: string;
 }
 
+// Re-export commonly used types from other modules
+export type { VaultBlob, DeltaUpdate } from './walrus';
+export type { VaultInfo, VaultEvent, NetworkInfo, PermissionCapability } from './sui';
+
 export interface PasswordItem {
   id: string;
   type: 'login' | 'card' | 'identity' | 'secure-note';

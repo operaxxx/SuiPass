@@ -1,8 +1,42 @@
 // Walrus related type definitions
 export interface WalrusClient {
-  uploadBlob: (data: Uint8Array, options?: UploadOptions) => Promise<UploadResult>;
+  uploadBlob: (options: { blobBytes: Uint8Array; epochs?: number }) => Promise<{ blobId: string }>;
   downloadBlob: (blobId: string) => Promise<Uint8Array>;
-  getBlobInfo: (blobId: string) => Promise<BlobInfo>;
+  readBlob: (options: { blobId: string }) => Promise<BlobInfo>;
+}
+
+export interface VaultBlob {
+  metadata: {
+    id: string;
+    name: string;
+    version: number;
+    created_at: number;
+    updated_at: number;
+  };
+  passwords: PasswordItem[];
+  compression: {
+    algorithm: 'none' | 'gzip';
+    ratio: number;
+    original_size: number;
+    compressed_size: number;
+  };
+  checksum: string;
+  version: number;
+}
+
+export interface DeltaUpdate {
+  version: number;
+  base_version: number;
+  changes: Change[];
+  checksum: string;
+}
+
+export interface Change {
+  type: 'create' | 'update' | 'delete';
+  entity: 'password' | 'folder';
+  id: string;
+  data?: any;
+  timestamp: number;
 }
 
 export interface UploadOptions {
@@ -40,10 +74,17 @@ export interface ReadBlobOptions {
 
 export interface EncryptedData {
   algorithm: 'AES-256-GCM';
-  ciphertext: Uint8Array;
-  iv: Uint8Array;
-  tag: Uint8Array;
-  salt: Uint8Array;
+  ciphertext: number[] | Uint8Array;
+  iv: number[] | Uint8Array;
+  tag: number[] | Uint8Array;
+  keyId: string;
+  keyDerivation?: {
+    algorithm: string;
+    iterations: number;
+    memory: number;
+    parallelism: number;
+    saltLength: number;
+  };
 }
 
 export interface UploadLog {

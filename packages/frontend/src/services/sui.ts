@@ -5,16 +5,12 @@ import {
   SuiClient, 
   getFullnodeUrl,
   Transaction,
-  RawSigner,
-  Ed25519Keypair,
 } from '@mysten/sui.js';
 import { WalletAdapter } from '@suiet/wallet-kit';
 import type {
-  Vault,
-  VaultSettings,
-  PermissionCapability,
-  StorageReference,
-  AuditLog,
+  VaultInfo,
+  VaultEvent,
+  NetworkInfo,
 } from '@/types/sui';
 
 export class SuiService {
@@ -24,7 +20,7 @@ export class SuiService {
   private network: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
 
   constructor() {
-    this.network = (process.env.VITE_SUI_NETWORK as any) || 'testnet';
+    this.network = (process.env.VITE_SUI_NETWORK as 'mainnet' | 'testnet' | 'devnet' | 'localnet') || 'testnet';
     this.client = new SuiClient({
       url: getFullnodeUrl(this.network),
     });
@@ -43,7 +39,7 @@ export class SuiService {
    */
   async createVault(
     name: string,
-    settings: VaultSettings,
+    settings: any,
     walrusBlobId: string
   ): Promise<{ vaultId: string; txDigest: string }> {
     if (!this.wallet) {
@@ -59,8 +55,8 @@ export class SuiService {
         arguments: [
           tx.pure.string(name),
           tx.pure.string(walrusBlobId),
-          tx.pure('u64', settings.auto_lock_timeout),
-          tx.pure('u64', settings.max_items),
+          tx.pure.u64(settings.auto_lock_timeout),
+          tx.pure.u64(settings.max_items),
           tx.pure.bool(settings.enable_sharing),
           tx.pure.bool(settings.require_2fa),
           tx.pure.bool(settings.backup_enabled),
@@ -70,19 +66,18 @@ export class SuiService {
 
       const result = await this.wallet.signAndExecuteTransaction({
         transaction: tx,
-        options: {
-          showEffects: true,
-          showObjectChanges: true,
-        },
+        account: this.wallet.account!,
+        chain: this.network,
       });
 
-      if (result.effects?.status.status !== 'success') {
+      if (typeof result.effects === 'string' || !result.effects) {
         throw new Error('Transaction failed');
       }
 
       // 从交易结果中提取保险库ID
-      const vaultObject = result.objectChanges?.created?.find(
-        obj => obj.objectType === `${this.packageId}::suipass_main::SuiPassVault`
+      const effects = result.effects as any;
+      const vaultObject = effects.objectChanges?.created?.find(
+        (obj: any) => obj.objectType === `${this.packageId}::suipass_main::SuiPassVault`
       );
 
       if (!vaultObject) {
@@ -124,12 +119,11 @@ export class SuiService {
 
       const result = await this.wallet.signAndExecuteTransaction({
         transaction: tx,
-        options: {
-          showEffects: true,
-        },
+        account: this.wallet.account!,
+        chain: this.network,
       });
 
-      if (result.effects?.status.status !== 'success') {
+      if (typeof result.effects === 'string' || !result.effects) {
         throw new Error('Transaction failed');
       }
 
@@ -164,9 +158,9 @@ export class SuiService {
         arguments: [
           tx.object(vaultId),
           tx.pure.address(grantedTo),
-          tx.pure('u64', permissions),
-          tx.pure('u64', expiresAt),
-          tx.pure('u64', maxUsage),
+          tx.pure.u64( permissions),
+          tx.pure.u64( expiresAt),
+          tx.pure.u64( maxUsage),
           tx.pure.vector('string', []), // conditions
         ],
         typeArguments: [],
@@ -174,19 +168,18 @@ export class SuiService {
 
       const result = await this.wallet.signAndExecuteTransaction({
         transaction: tx,
-        options: {
-          showEffects: true,
-          showObjectChanges: true,
-        },
+        account: this.wallet.account!,
+        chain: this.network,
       });
 
-      if (result.effects?.status.status !== 'success') {
+      if (typeof result.effects === 'string' || !result.effects) {
         throw new Error('Transaction failed');
       }
 
       // 从交易结果中提取权限对象ID
-      const capabilityObject = result.objectChanges?.created?.find(
-        obj => obj.objectType === `${this.packageId}::permission_manager::PermissionCapability`
+      const effects = result.effects as any;
+      const capabilityObject = effects.objectChanges?.created?.find(
+        (obj: any) => obj.objectType === `${this.packageId}::permission_manager::PermissionCapability`
       );
 
       if (!capabilityObject) {
@@ -226,12 +219,11 @@ export class SuiService {
 
       const result = await this.wallet.signAndExecuteTransaction({
         transaction: tx,
-        options: {
-          showEffects: true,
-        },
+        account: this.wallet.account!,
+        chain: this.network,
       });
 
-      if (result.effects?.status.status !== 'success') {
+      if (typeof result.effects === 'string' || !result.effects) {
         throw new Error('Transaction failed');
       }
 
@@ -429,7 +421,7 @@ export class SuiService {
         filter: {
           MoveEventType: `${this.packageId}::vault_core::VaultCreated`,
         },
-        onEvent: (event) => {
+        onEvent: (event: any) => {
           // 处理事件并调用回调
           const vaultEvent = this.parseVaultEvent(event);
           if (vaultEvent && vaultEvent.vaultId === vaultId) {
@@ -452,7 +444,7 @@ export class SuiService {
     try {
       const result = await this.client.devInspectTransactionBlock({
         transaction,
-        sender: this.wallet?.address || '0x0',
+        sender: this.wallet?.account?.address || '0x0',
       });
 
       if (!result.effects?.gasUsed) {

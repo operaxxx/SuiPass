@@ -197,7 +197,6 @@ export class CacheService {
    * 强制执行缓存限制
    */
   private async enforceCacheLimit(): Promise<void> {
-    const db = await this.db;
     const stats = await this.getCacheStats();
     
     // 检查大小限制
@@ -292,8 +291,8 @@ export class CacheService {
   async setSession(key: string, session: SessionData): Promise<void> {
     const db = await this.db;
     await db.put('sessions', {
-      key,
       ...session,
+      key,
     });
   }
 
@@ -381,6 +380,7 @@ export interface CacheStats {
 }
 
 export interface SessionData {
+  key: string;
   userId: string;
   vaultId: string;
   token: string;
@@ -418,7 +418,9 @@ export class MemoryCache {
     // 如果超过最大大小，删除最旧的条目
     if (this.cache.size > this.maxSize) {
       const oldestKey = this.cache.keys().next().value;
-      this.cache.delete(oldestKey);
+      if (oldestKey) {
+        this.cache.delete(oldestKey);
+      }
     }
   }
 
