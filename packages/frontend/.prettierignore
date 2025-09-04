@@ -1,0 +1,50 @@
+# 依赖和构建产物
+node_modules/
+dist/
+build/
+coverage/
+
+# 日志文件
+*.log
+logs/
+
+# 环境配置
+.env
+.env.local
+.env.*.local
+
+# 缓存
+.cache/
+.temp/
+*.tmp
+*.swp
+
+# 生成的文件
+*.generated.*
+*.gen.*
+
+# 配置文件（特殊情况）
+.prettierrc.js
+.prettierrc.cjs
+prettier.config.js
+
+# 数据库文件
+*.db
+*.sqlite
+
+# 操作系统生成的文件
+.DS_Store
+Thumbs.db
+
+# 测试覆盖率报告
+coverage/
+.nyc_output/
+
+# 文档生成
+docs/api/
+
+# 密钥和证书
+*.key
+*.crt
+*.pem
+*.p12
