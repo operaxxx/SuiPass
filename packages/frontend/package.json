@@ -19,8 +19,8 @@
     "docs:generate": "typedoc src/index.ts --out ../../docs/frontend"
   },
   "dependencies": {
-    "@mysten/sui.js": "^0.50.0",
-    "@mysten/walrus": "^0.1.0",
+    "@mysten/sui.js": "^0.54.1",
+    "@mysten/walrus": "^0.6.7",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
     "@radix-ui/react-label": "2.1.7",
