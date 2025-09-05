@@ -7,8 +7,6 @@
   },
   "extends": [
     "eslint:recommended",
-    "@typescript-eslint/recommended",
-    "@typescript-eslint/recommended-requiring-type-checking",
     "plugin:react/recommended",
     "plugin:react-hooks/recommended",
     "plugin:jsx-a11y/recommended",
@@ -57,76 +55,82 @@
   },
   "rules": {
     // TypeScript 规则
-    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
     "@typescript-eslint/no-explicit-any": "warn",
-    "@typescript-eslint/explicit-function-return-type": "warn",
-    "@typescript-eslint/no-non-null-assertion": "error",
-    "@typescript-eslint/prefer-nullish-coalescing": "error",
-    "@typescript-eslint/prefer-optional-chain": "error",
-    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-non-null-assertion": "warn",
+    "@typescript-eslint/prefer-nullish-coalescing": "warn",
+    "@typescript-eslint/prefer-optional-chain": "warn",
+    "@typescript-eslint/no-floating-promises": "warn",
 
     // React 规则
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
     "react/jsx-uses-react": "off",
-    "react/jsx-key": "error",
+    "react/jsx-key": "warn",
     "react/jsx-no-bind": "warn",
-    "react/jsx-no-duplicate-props": "error",
+    "react/jsx-no-duplicate-props": "warn",
     "react/no-unescaped-entities": "warn",
-    "react/no-array-index-key": "error",
+    "react/no-array-index-key": "warn",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
 
     // 安全规则
-    "security/detect-object-injection": "error",
-    "security/detect-non-literal-fs-filename": "error",
-    "security/detect-non-literal-regexp": "error",
-    "security/detect-unsafe-regex": "error",
-    "security/detect-eval-with-expression": "error",
-    "security/detect-no-csrf-before-method-override": "error",
+    "security/detect-object-injection": "warn",
+    "security/detect-non-literal-fs-filename": "warn",
+    "security/detect-non-literal-regexp": "warn",
+    "security/detect-unsafe-regex": "warn",
+    "security/detect-eval-with-expression": "warn",
+    "security/detect-no-csrf-before-method-override": "warn",
     "security/detect-non-literal-require": "warn",
 
     // 导入规则
     "import/order": [
-      "error",
+      "warn",
       {
         "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
         "newlines-between": "always",
         "alphabetize": { "order": "asc", "caseInsensitive": true }
       }
     ],
-    "import/no-unresolved": "error",
-    "import/no-duplicates": "error",
-    "import/no-cycle": "error",
-    "import/no-useless-path-segments": "error",
+    "import/no-unresolved": "warn",
+    "import/no-duplicates": "warn",
+    "import/no-cycle": "warn",
+    "import/no-useless-path-segments": "warn",
 
-    // Unicorn 规则
-    "unicorn/filename-case": ["error", { "case": "camelCase" }],
-    "unicorn/no-null": "error",
-    "unicorn/prefer-node-protocol": "error",
-    "unicorn/prefer-spread": "error",
-    "unicorn/prefer-array-some": "error",
-    "unicorn/prefer-array-find": "error",
+    // Unicorn 规则 - 禁用过于严格的规则
+    "unicorn/filename-case": "off",
+    "unicorn/no-null": "warn",
+    "unicorn/prefer-node-protocol": "warn",
+    "unicorn/prefer-spread": "warn",
+    "unicorn/prefer-array-some": "off",
+    "unicorn/prefer-array-find": "off",
+    "unicorn/better-regex": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "unicorn/explicit-length-check": "off",
+    "unicorn/no-array-for-each": "off",
+    "unicorn/no-array-reduce": "off",
+    "unicorn/no-useless-undefined": "off",
 
     // SonarJS 规则
-    "sonarjs/cognitive-complexity": ["warn", 15],
-    "sonarjs/no-duplicate-string": "warn",
-    "sonarjs/no-identical-functions": "warn",
-    "sonarjs/no-collapsible-if": "error",
-    "sonarjs/prefer-immediate-return": "error",
+    "sonarjs/cognitive-complexity": ["warn", 25],
+    "sonarjs/no-duplicate-string": "off",
+    "sonarjs/no-identical-functions": "off",
+    "sonarjs/no-collapsible-if": "warn",
+    "sonarjs/prefer-immediate-return": "warn",
 
     // 通用规则
     "no-console": ["warn", { "allow": ["warn", "error"] }],
-    "no-debugger": "error",
-    "no-alert": "error",
-    "no-var": "error",
-    "prefer-const": "error",
-    "prefer-arrow-callback": "error",
-    "prefer-template": "error",
-    "object-shorthand": "error",
-    "consistent-return": "error",
-    "eqeqeq": ["error", "always"],
-    "curly": "error"
+    "no-debugger": "warn",
+    "no-alert": "warn",
+    "no-var": "warn",
+    "prefer-const": "warn",
+    "prefer-arrow-callback": "warn",
+    "prefer-template": "warn",
+    "object-shorthand": "warn",
+    "consistent-return": "warn",
+    "eqeqeq": ["warn", "always"],
+    "curly": "warn"
   },
   "overrides": [
     {

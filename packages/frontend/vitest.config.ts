@@ -19,10 +19,6 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules/', 'dist/', '.idea/', '.git/', '.cache/', 'src/test/setup.ts'],
 
-    // 全局测试配置
-    globals: true,
-    environment: 'jsdom',
-
     // 模拟和清理
     mockReset: true,
     restoreMocks: true,
@@ -84,6 +80,8 @@ export default defineConfig({
     typecheck: {
       enabled: true,
       tsconfig: './tsconfig.json',
+      include: ['src/**/*.{test,spec}.{ts,tsx}'],
+      exclude: ['node_modules/', 'dist/', '.idea/', '.git/', '.cache/'],
     },
   },
 });
