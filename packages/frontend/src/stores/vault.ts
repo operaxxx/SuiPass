@@ -3,19 +3,13 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+
+import { AuditService } from '@/services/audit';
+import { CacheService } from '@/services/cache';
 import { SuiService } from '@/services/sui';
 import { WalrusStorageService } from '@/services/walrus';
-import { EncryptionService } from '@/services/encryption';
-import { CacheService } from '@/services/cache';
-import { AuditService } from '@/services/audit';
-import type { 
-  VaultBlob, 
-  VaultInfo, 
-  VaultSettings, 
-  PasswordItem,
-  Folder,
-  PermissionCapability 
-} from '@/types';
+import type { VaultBlob, VaultInfo, PasswordItem, PermissionCapability } from '@/types';
+import type { VaultSettings } from '@/types/walrus';
 
 interface VaultState {
   // 状态
@@ -25,34 +19,34 @@ interface VaultState {
   isLoading: boolean;
   error: string | null;
   isOnline: boolean;
-  
+
   // 搜索和过滤
   searchQuery: string;
   selectedFolder: string | null;
   viewMode: 'grid' | 'list';
-  
+
   // 权限状态
   permissions: PermissionCapability[];
   sharedWithMe: VaultInfo[];
-  
+
   // 操作方法
   createVault: (name: string, settings: VaultSettings) => Promise<void>;
   updateVault: (vaultId: string, updates: Partial<VaultInfo>) => Promise<void>;
   deleteVault: (vaultId: string) => Promise<void>;
   setCurrentVault: (vault: VaultInfo | null) => Promise<void>;
   refreshVaults: () => Promise<void>;
-  
+
   // 数据操作
   addPassword: (password: Omit<PasswordItem, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
   updatePassword: (passwordId: string, updates: Partial<PasswordItem>) => Promise<void>;
   deletePassword: (passwordId: string) => Promise<void>;
   searchPasswords: (query: string) => PasswordItem[];
-  
+
   // 分享和权限
   shareVault: (vaultId: string, address: string, permissions: number) => Promise<void>;
   revokeAccess: (capabilityId: string) => Promise<void>;
   getSharedVaults: () => Promise<void>;
-  
+
   // 工具方法
   clearError: () => void;
   setOnlineStatus: (isOnline: boolean) => void;
@@ -63,7 +57,6 @@ interface VaultState {
 // 创建服务实例
 const suiService = new SuiService();
 const walrusService = new WalrusStorageService();
-const encryptionService = new EncryptionService();
 const cacheService = new CacheService();
 const auditService = new AuditService();
 
@@ -86,13 +79,14 @@ export const useVaultStore = create<VaultState>()(
       // 创建保险库
       createVault: async (name: string, settings: VaultSettings) => {
         set({ isLoading: true, error: null });
-        
+
         try {
           // 1. 创建空的保险库数据
           const emptyVault: VaultBlob = {
             metadata: {
               id: crypto.randomUUID(),
               name,
+              version: 1,
               created_at: Date.now(),
               updated_at: Date.now(),
               total_items: 0,
@@ -105,7 +99,7 @@ export const useVaultStore = create<VaultState>()(
                 key_derivation: {
                   algorithm: 'Argon2id',
                   iterations: 3,
-                  memory: 65536,
+                  memory: 65_536,
                   parallelism: 1,
                   salt: '',
                 },
@@ -140,10 +134,16 @@ export const useVaultStore = create<VaultState>()(
             version: 1,
             createdAt: Date.now(),
             updatedAt: Date.now(),
-            settings,
+            settings: {
+              autoLockTimeout: settings.auto_lock_timeout,
+              maxItems: settings.max_items,
+              enableSharing: settings.enable_sharing,
+              require2fa: settings.require_2fa,
+              backupEnabled: settings.backup_enabled,
+            },
           };
 
-          set((state) => ({
+          set(state => ({
             vaults: [...state.vaults, newVault],
             currentVault: newVault,
             currentVaultData: emptyVault,
@@ -158,7 +158,10 @@ export const useVaultStore = create<VaultState>()(
             metadata: { name, blobId },
           });
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
+            isLoading: false,
+          });
           throw error;
         }
       },
@@ -166,7 +169,7 @@ export const useVaultStore = create<VaultState>()(
       // 更新保险库
       updateVault: async (vaultId: string, updates: Partial<VaultInfo>) => {
         set({ isLoading: true, error: null });
-        
+
         try {
           const state = get();
           const vault = state.vaults.find(v => v.id === vaultId);
@@ -175,24 +178,30 @@ export const useVaultStore = create<VaultState>()(
           }
 
           const updatedVault = { ...vault, ...updates };
-          
+
           // 如果有数据更新，需要重新上传到Walrus
           if (state.currentVaultData) {
             const masterPassword = await getMasterPassword();
-            const newBlobId = await walrusService.uploadVault(state.currentVaultData, masterPassword);
-            
+            const newBlobId = await walrusService.uploadVault(
+              state.currentVaultData,
+              masterPassword
+            );
+
             // 更新智能合约
             await suiService.updateVault(vaultId, newBlobId);
             updatedVault.walrusBlobId = newBlobId;
           }
 
-          set((state) => ({
-            vaults: state.vaults.map(v => v.id === vaultId ? updatedVault : v),
+          set(state => ({
+            vaults: state.vaults.map(v => (v.id === vaultId ? updatedVault : v)),
             currentVault: state.currentVault?.id === vaultId ? updatedVault : state.currentVault,
             isLoading: false,
           }));
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
+            isLoading: false,
+          });
           throw error;
         }
       },
@@ -200,7 +209,7 @@ export const useVaultStore = create<VaultState>()(
       // 删除保险库
       deleteVault: async (vaultId: string) => {
         set({ isLoading: true, error: null });
-        
+
         try {
           const state = get();
           const vault = state.vaults.find(v => v.id === vaultId);
@@ -211,9 +220,9 @@ export const useVaultStore = create<VaultState>()(
           // 1. 从智能合约删除（如果支持）
           // 2. 从缓存删除
           await cacheService.deleteVault(vault.walrusBlobId);
-          
+
           // 3. 更新本地状态
-          set((state) => ({
+          set(state => ({
             vaults: state.vaults.filter(v => v.id !== vaultId),
             currentVault: state.currentVault?.id === vaultId ? null : state.currentVault,
             currentVaultData: state.currentVault?.id === vaultId ? null : state.currentVaultData,
@@ -227,7 +236,10 @@ export const useVaultStore = create<VaultState>()(
             success: true,
           });
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
+            isLoading: false,
+          });
           throw error;
         }
       },
@@ -244,14 +256,17 @@ export const useVaultStore = create<VaultState>()(
         try {
           const masterPassword = await getMasterPassword();
           const vaultData = await walrusService.downloadVault(vault.walrusBlobId, masterPassword);
-          
+
           set({
             currentVault: vault,
             currentVaultData: vaultData,
             isLoading: false,
           });
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
+            isLoading: false,
+          });
           throw error;
         }
       },
@@ -259,17 +274,20 @@ export const useVaultStore = create<VaultState>()(
       // 刷新保险库列表
       refreshVaults: async () => {
         set({ isLoading: true, error: null });
-        
+
         try {
           const walletAddress = getWalletAddress(); // 从认证状态获取
           const vaults = await suiService.getUserVaults(walletAddress);
-          
+
           set({
             vaults,
             isLoading: false,
           });
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
+            isLoading: false,
+          });
           throw error;
         }
       },
@@ -287,7 +305,6 @@ export const useVaultStore = create<VaultState>()(
             id: crypto.randomUUID(),
             created_at: Date.now(),
             updated_at: Date.now(),
-            password_strength: encryptionService.calculatePasswordScore(passwordData.password),
           };
 
           const updatedVault = {
@@ -309,17 +326,19 @@ export const useVaultStore = create<VaultState>()(
           const newBlobId = await walrusService.uploadVault(updatedVault, masterPassword);
 
           // 更新智能合约
-          await suiService.updateVault(state.currentVault.id, newBlobId);
+          await suiService.updateVault(state.currentVault!.id, newBlobId);
 
           // 更新本地状态
           set({
             currentVaultData: updatedVault,
-            currentVault: state.currentVault ? {
-              ...state.currentVault,
-              walrusBlobId: newBlobId,
-              version: updatedVault.version,
-              updatedAt: Date.now(),
-            } : null,
+            currentVault: state.currentVault
+              ? {
+                  ...state.currentVault,
+                  walrusBlobId: newBlobId,
+                  version: updatedVault.version,
+                  updatedAt: Date.now(),
+                }
+              : null,
           });
 
           // 记录审计日志
@@ -330,7 +349,7 @@ export const useVaultStore = create<VaultState>()(
             metadata: { title: newPassword.title },
           });
         } catch (error) {
-          set({ error: error.message });
+          set({ error: (error as Error).message });
           throw error;
         }
       },
@@ -362,19 +381,21 @@ export const useVaultStore = create<VaultState>()(
           const masterPassword = await getMasterPassword();
           const newBlobId = await walrusService.uploadVault(updatedVault, masterPassword);
 
-          await suiService.updateVault(state.currentVault.id, newBlobId);
+          await suiService.updateVault(state.currentVault!.id, newBlobId);
 
           set({
             currentVaultData: updatedVault,
-            currentVault: state.currentVault ? {
-              ...state.currentVault,
-              walrusBlobId: newBlobId,
-              version: updatedVault.version,
-              updatedAt: Date.now(),
-            } : null,
+            currentVault: state.currentVault
+              ? {
+                  ...state.currentVault,
+                  walrusBlobId: newBlobId,
+                  version: updatedVault.version,
+                  updatedAt: Date.now(),
+                }
+              : null,
           });
         } catch (error) {
-          set({ error: error.message });
+          set({ error: (error as Error).message });
           throw error;
         }
       },
@@ -387,7 +408,9 @@ export const useVaultStore = create<VaultState>()(
         }
 
         try {
-          const updatedPasswords = state.currentVaultData.passwords.filter(p => p.id !== passwordId);
+          const updatedPasswords = state.currentVaultData.passwords.filter(
+            p => p.id !== passwordId
+          );
 
           const updatedVault = {
             ...state.currentVaultData,
@@ -405,19 +428,21 @@ export const useVaultStore = create<VaultState>()(
           const masterPassword = await getMasterPassword();
           const newBlobId = await walrusService.uploadVault(updatedVault, masterPassword);
 
-          await suiService.updateVault(state.currentVault.id, newBlobId);
+          await suiService.updateVault(state.currentVault!.id, newBlobId);
 
           set({
             currentVaultData: updatedVault,
-            currentVault: state.currentVault ? {
-              ...state.currentVault,
-              walrusBlobId: newBlobId,
-              version: updatedVault.version,
-              updatedAt: Date.now(),
-            } : null,
+            currentVault: state.currentVault
+              ? {
+                  ...state.currentVault,
+                  walrusBlobId: newBlobId,
+                  version: updatedVault.version,
+                  updatedAt: Date.now(),
+                }
+              : null,
           });
         } catch (error) {
-          set({ error: error.message });
+          set({ error: (error as Error).message });
           throw error;
         }
       },
@@ -430,40 +455,52 @@ export const useVaultStore = create<VaultState>()(
         }
 
         const lowercaseQuery = query.toLowerCase();
-        return state.currentVaultData.passwords.filter(password =>
-          password.title.toLowerCase().includes(lowercaseQuery) ||
-          password.username?.toLowerCase().includes(lowercaseQuery) ||
-          password.url?.toLowerCase().includes(lowercaseQuery) ||
-          password.notes?.toLowerCase().includes(lowercaseQuery) ||
-          password.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery))
+        return state.currentVaultData.passwords.filter(
+          password =>
+            password.title.toLowerCase().includes(lowercaseQuery) ||
+            password.username?.toLowerCase().includes(lowercaseQuery) ||
+            password.url?.toLowerCase().includes(lowercaseQuery) ||
+            password.notes?.toLowerCase().includes(lowercaseQuery) ||
+            password.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery))
         );
       },
 
       // 分享保险库
       shareVault: async (vaultId: string, address: string, permissions: number) => {
         set({ isLoading: true, error: null });
-        
+
         try {
-          const expiresAt = Date.now() + (30 * 24 * 60 * 60 * 1000); // 30天后过期
-          const { capabilityId } = await suiService.shareVault(vaultId, address, permissions, expiresAt);
-          
-          set((state) => ({
-            permissions: [...state.permissions, {
-              id: capabilityId,
-              vaultId,
-              grantedTo: address,
-              grantedBy: getWalletAddress(),
-              permissions,
-              expiresAt,
-              usageCount: 0,
-              maxUsage: 100,
-              conditions: [],
-              createdAt: Date.now(),
-            }],
+          const expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30天后过期
+          const { capabilityId } = await suiService.shareVault(
+            vaultId,
+            address,
+            permissions,
+            expiresAt
+          );
+
+          set(state => ({
+            permissions: [
+              ...state.permissions,
+              {
+                id: capabilityId,
+                vaultId,
+                grantedTo: address,
+                grantedBy: getWalletAddress(),
+                permissions,
+                expiresAt,
+                usageCount: 0,
+                maxUsage: 100,
+                conditions: [],
+                createdAt: Date.now(),
+              },
+            ],
             isLoading: false,
           }));
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
+            isLoading: false,
+          });
           throw error;
         }
       },
@@ -471,16 +508,19 @@ export const useVaultStore = create<VaultState>()(
       // 撤销访问权限
       revokeAccess: async (capabilityId: string) => {
         set({ isLoading: true, error: null });
-        
+
         try {
           await suiService.revokeAccess(capabilityId);
-          
-          set((state) => ({
+
+          set(state => ({
             permissions: state.permissions.filter(p => p.id !== capabilityId),
             isLoading: false,
           }));
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
+            isLoading: false,
+          });
           throw error;
         }
       },
@@ -488,17 +528,20 @@ export const useVaultStore = create<VaultState>()(
       // 获取分享给我的保险库
       getSharedVaults: async () => {
         set({ isLoading: true, error: null });
-        
+
         try {
           const walletAddress = getWalletAddress();
           const permissions = await suiService.getUserPermissions(walletAddress);
-          
+
           set({
             permissions,
             isLoading: false,
           });
         } catch (error) {
-          set({ error: error.message, isLoading: false });
+          set({
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
+            isLoading: false,
+          });
           throw error;
         }
       },
@@ -519,7 +562,7 @@ export const useVaultStore = create<VaultState>()(
 
         const masterPassword = await getMasterPassword();
         const vaultData = await walrusService.downloadVault(vault.walrusBlobId, masterPassword);
-        
+
         return JSON.stringify(vaultData, null, 2);
       },
 
@@ -527,16 +570,16 @@ export const useVaultStore = create<VaultState>()(
       importVault: async (data: string) => {
         try {
           const vaultData = JSON.parse(data) as VaultBlob;
-          
+
           // 验证数据结构
           if (!vaultData.metadata || !vaultData.passwords) {
             throw new Error('Invalid vault data format');
           }
 
           // 创建新的保险库
-          await get().createVault(vaultData.metadata.name, vaultData.settings);
+          await get().createVault(vaultData.metadata.name, vaultData.settings!);
         } catch (error) {
-          set({ error: 'Failed to import vault: ' + error.message });
+          set({ error: `Failed to import vault: ${(error as Error).message}` });
           throw error;
         }
       },
@@ -544,7 +587,7 @@ export const useVaultStore = create<VaultState>()(
     {
       name: 'vault-storage',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
+      partialize: state => ({
         vaults: state.vaults,
         currentVault: state.currentVault,
         viewMode: state.viewMode,
@@ -573,6 +616,6 @@ async function generateChecksum(vault: VaultBlob): Promise<string> {
   const encoder = new TextEncoder();
   const dataBuffer = encoder.encode(jsonString);
   const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashArray = [...new Uint8Array(hashBuffer)];
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }

@@ -1,0 +1,31 @@
+# Global code owners
+* @hukun
+
+# Frontend code
+packages/frontend/* @hukun
+packages/frontend/src/**/* @hukun
+packages/frontend/public/**/* @hukun
+
+# Smart contracts
+packages/contracts/* @hukun
+packages/contracts/sources/**/* @hukun
+packages/contracts/tests/**/* @hukun
+
+# Shared utilities
+packages/shared/* @hukun
+packages/shared/src/**/* @hukun
+
+# Documentation
+docs/**/* @hukun
+
+# CI/CD configuration
+.github/**/* @hukun
+
+# Root configuration
+*.json @hukun
+*.js @hukun
+*.ts @hukun
+*.md @hukun
+
+# Build and deployment
+scripts/**/* @hukun

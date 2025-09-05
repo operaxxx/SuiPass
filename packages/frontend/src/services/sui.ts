@@ -1,21 +1,16 @@
 // Sui区块链服务实现
 // packages/frontend/src/services/sui.ts
 
-import { 
-  SuiClient, 
-  getFullnodeUrl,
-  Transaction,
-  RawSigner,
-  Ed25519Keypair,
-} from '@mysten/sui.js';
-import { WalletAdapter } from '@suiet/wallet-kit';
+import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
+import { Transaction } from '@mysten/sui/transactions';
+
 import type {
-  Vault,
-  VaultSettings,
+  WalletAdapter,
+  VaultInfo,
+  VaultEvent,
+  NetworkInfo,
   PermissionCapability,
-  StorageReference,
-  AuditLog,
-} from '@/types/sui';
+} from '../types/sui';
 
 export class SuiService {
   private client: SuiClient;
@@ -24,11 +19,23 @@ export class SuiService {
   private network: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
 
   constructor() {
-    this.network = (process.env.VITE_SUI_NETWORK as any) || 'testnet';
+    // 验证必需的环境变量
+    const network = import.meta.env['VITE_SUI_NETWORK'];
+    const packageId = import.meta.env['VITE_SUI_PACKAGE_ID'];
+
+    if (!network) {
+      throw new Error('VITE_SUI_NETWORK environment variable is required');
+    }
+
+    if (!packageId) {
+      throw new Error('VITE_SUI_PACKAGE_ID environment variable is required');
+    }
+
+    this.network = network as 'mainnet' | 'testnet' | 'devnet' | 'localnet';
     this.client = new SuiClient({
       url: getFullnodeUrl(this.network),
     });
-    this.packageId = process.env.VITE_PACKAGE_ID || '';
+    this.packageId = packageId;
   }
 
   /**
@@ -39,28 +46,39 @@ export class SuiService {
   }
 
   /**
+   * 验证钱包连接状态
+   */
+  private validateWalletConnection(): void {
+    if (!this.wallet || !this.wallet.connected) {
+      throw new Error('Wallet not connected');
+    }
+
+    if (!this.wallet.accounts || this.wallet.accounts.length === 0) {
+      throw new Error('No accounts available in wallet');
+    }
+  }
+
+  /**
    * 创建保险库
    */
   async createVault(
     name: string,
-    settings: VaultSettings,
+    settings: any,
     walrusBlobId: string
   ): Promise<{ vaultId: string; txDigest: string }> {
-    if (!this.wallet) {
-      throw new Error('Wallet not connected');
-    }
+    this.validateWalletConnection();
 
     try {
       const tx = new Transaction();
-      
+
       // 调用智能合约创建保险库
       tx.moveCall({
         target: `${this.packageId}::suipass_main::create_suipass_vault`,
         arguments: [
           tx.pure.string(name),
           tx.pure.string(walrusBlobId),
-          tx.pure('u64', settings.auto_lock_timeout),
-          tx.pure('u64', settings.max_items),
+          tx.pure.u64(settings.auto_lock_timeout),
+          tx.pure.u64(settings.max_items),
           tx.pure.bool(settings.enable_sharing),
           tx.pure.bool(settings.require_2fa),
           tx.pure.bool(settings.backup_enabled),
@@ -68,21 +86,25 @@ export class SuiService {
         typeArguments: [],
       });
 
-      const result = await this.wallet.signAndExecuteTransaction({
-        transaction: tx,
-        options: {
-          showEffects: true,
-          showObjectChanges: true,
-        },
-      });
+      const account = this.wallet?.accounts?.[0];
+      if (!account) {
+        throw new Error('No account available for transaction');
+      }
 
-      if (result.effects?.status.status !== 'success') {
+      const result = await this.wallet!.signAndExecuteTransaction({
+        transaction: tx,
+        account,
+        chain: `${this.network}:${this.network}`,
+      } as any);
+
+      if (!result.effects || typeof result.effects === 'string') {
         throw new Error('Transaction failed');
       }
 
       // 从交易结果中提取保险库ID
-      const vaultObject = result.objectChanges?.created?.find(
-        obj => obj.objectType === `${this.packageId}::suipass_main::SuiPassVault`
+      const effects = result.effects as any;
+      const vaultObject = effects.objectChanges?.created?.find(
+        (object: any) => object.objectType === `${this.packageId}::suipass_main::SuiPassVault`
       );
 
       if (!vaultObject) {
@@ -102,34 +124,30 @@ export class SuiService {
   /**
    * 更新保险库数据
    */
-  async updateVault(
-    vaultId: string,
-    newBlobId: string
-  ): Promise<{ txDigest: string }> {
-    if (!this.wallet) {
-      throw new Error('Wallet not connected');
-    }
+  async updateVault(vaultId: string, newBlobId: string): Promise<{ txDigest: string }> {
+    this.validateWalletConnection();
 
     try {
       const tx = new Transaction();
-      
+
       tx.moveCall({
         target: `${this.packageId}::suipass_main::update_vault_data`,
-        arguments: [
-          tx.object(vaultId),
-          tx.pure.string(newBlobId),
-        ],
+        arguments: [tx.object(vaultId), tx.pure.string(newBlobId)],
         typeArguments: [],
       });
 
-      const result = await this.wallet.signAndExecuteTransaction({
-        transaction: tx,
-        options: {
-          showEffects: true,
-        },
-      });
+      const account = this.wallet?.accounts?.[0];
+      if (!account) {
+        throw new Error('No account available for transaction');
+      }
 
-      if (result.effects?.status.status !== 'success') {
+      const result = await this.wallet!.signAndExecuteTransaction({
+        transaction: tx,
+        account,
+        chain: `${this.network}:${this.network}`,
+      } as any);
+
+      if (typeof result.effects === 'string' || !result.effects) {
         throw new Error('Transaction failed');
       }
 
@@ -152,41 +170,44 @@ export class SuiService {
     expiresAt: number,
     maxUsage: number = 100
   ): Promise<{ capabilityId: string; txDigest: string }> {
-    if (!this.wallet) {
-      throw new Error('Wallet not connected');
-    }
+    this.validateWalletConnection();
 
     try {
       const tx = new Transaction();
-      
+
       tx.moveCall({
         target: `${this.packageId}::suipass_main::share_vault_access`,
         arguments: [
           tx.object(vaultId),
           tx.pure.address(grantedTo),
-          tx.pure('u64', permissions),
-          tx.pure('u64', expiresAt),
-          tx.pure('u64', maxUsage),
+          tx.pure.u64(permissions),
+          tx.pure.u64(expiresAt),
+          tx.pure.u64(maxUsage),
           tx.pure.vector('string', []), // conditions
         ],
         typeArguments: [],
       });
 
-      const result = await this.wallet.signAndExecuteTransaction({
-        transaction: tx,
-        options: {
-          showEffects: true,
-          showObjectChanges: true,
-        },
-      });
+      const account = this.wallet?.accounts?.[0];
+      if (!account) {
+        throw new Error('No account available for transaction');
+      }
 
-      if (result.effects?.status.status !== 'success') {
+      const result = await this.wallet!.signAndExecuteTransaction({
+        transaction: tx,
+        account,
+        chain: `${this.network}:${this.network}`,
+      } as any);
+
+      if (typeof result.effects === 'string' || !result.effects) {
         throw new Error('Transaction failed');
       }
 
       // 从交易结果中提取权限对象ID
-      const capabilityObject = result.objectChanges?.created?.find(
-        obj => obj.objectType === `${this.packageId}::permission_manager::PermissionCapability`
+      const effects = result.effects as any;
+      const capabilityObject = effects.objectChanges?.created?.find(
+        (object: any) =>
+          object.objectType === `${this.packageId}::permission_manager::PermissionCapability`
       );
 
       if (!capabilityObject) {
@@ -206,32 +227,30 @@ export class SuiService {
   /**
    * 撤销访问权限
    */
-  async revokeAccess(
-    capabilityId: string
-  ): Promise<{ txDigest: string }> {
-    if (!this.wallet) {
-      throw new Error('Wallet not connected');
-    }
+  async revokeAccess(capabilityId: string): Promise<{ txDigest: string }> {
+    this.validateWalletConnection();
 
     try {
       const tx = new Transaction();
-      
+
       tx.moveCall({
         target: `${this.packageId}::permission_manager::revoke_capability`,
-        arguments: [
-          tx.object(capabilityId),
-        ],
+        arguments: [tx.object(capabilityId)],
         typeArguments: [],
       });
 
-      const result = await this.wallet.signAndExecuteTransaction({
-        transaction: tx,
-        options: {
-          showEffects: true,
-        },
-      });
+      const account = this.wallet?.accounts?.[0];
+      if (!account) {
+        throw new Error('No account available for transaction');
+      }
 
-      if (result.effects?.status.status !== 'success') {
+      const result = await this.wallet!.signAndExecuteTransaction({
+        transaction: tx,
+        account,
+        chain: `${this.network}:${this.network}`,
+      } as any);
+
+      if (typeof result.effects === 'string' || !result.effects) {
         throw new Error('Transaction failed');
       }
 
@@ -425,11 +444,11 @@ export class SuiService {
     callback: (event: VaultEvent) => void
   ): Promise<() => void> {
     try {
-      const unsubscribe = await this.client.subscribeEvent({
+      return await this.client.subscribeEvent({
         filter: {
           MoveEventType: `${this.packageId}::vault_core::VaultCreated`,
         },
-        onEvent: (event) => {
+        onMessage: (event: any) => {
           // 处理事件并调用回调
           const vaultEvent = this.parseVaultEvent(event);
           if (vaultEvent && vaultEvent.vaultId === vaultId) {
@@ -437,8 +456,6 @@ export class SuiService {
           }
         },
       });
-
-      return unsubscribe;
     } catch (error) {
       console.error('Failed to subscribe to vault events:', error);
       throw new Error('Failed to subscribe to vault events');
@@ -450,16 +467,21 @@ export class SuiService {
    */
   async estimateGas(transaction: Transaction): Promise<number> {
     try {
+      const senderAddress = this.wallet?.accounts[0]?.address;
+      if (!senderAddress) {
+        throw new Error('Wallet not connected or no account available');
+      }
+
       const result = await this.client.devInspectTransactionBlock({
-        transaction,
-        sender: this.wallet?.address || '0x0',
+        transactionBlock: transaction,
+        sender: senderAddress,
       });
 
       if (!result.effects?.gasUsed) {
         throw new Error('Failed to estimate gas');
       }
 
-      return parseInt(result.effects.gasUsed);
+      return Number.parseInt(String(result.effects.gasUsed));
     } catch (error) {
       console.error('Failed to estimate gas:', error);
       throw new Error('Failed to estimate gas');
@@ -473,13 +495,13 @@ export class SuiService {
     try {
       const checkpoint = await this.client.getLatestCheckpointSequenceNumber();
       const protocol = await this.client.getProtocolConfig();
-      
+
       return {
         network: this.network,
-        checkpoint,
-        protocolVersion: protocol.protocol_version,
-        chainId: protocol.chain_id,
-        systemStateVersion: protocol.system_state_version,
+        checkpoint: Number(checkpoint),
+        protocolVersion: Number.parseInt(String(protocol.protocolVersion)),
+        chainId: (protocol as any).chainId?.toString() || '',
+        systemStateVersion: (protocol as any).systemStateVersion || 0,
       };
     } catch (error) {
       console.error('Failed to get network info:', error);
@@ -496,7 +518,7 @@ export class SuiService {
       const parsedJson = event.parsedJson as any;
 
       switch (eventType) {
-        case `${this.packageId}::vault_core::VaultCreated`:
+        case `${this.packageId}::vault_core::VaultCreated`: {
           return {
             type: 'created',
             vaultId: parsedJson.vault_id,
@@ -504,8 +526,9 @@ export class SuiService {
             name: parsedJson.name,
             timestamp: parsedJson.timestamp,
           };
-        
-        case `${this.packageId}::vault_core::VaultUpdated`:
+        }
+
+        case `${this.packageId}::vault_core::VaultUpdated`: {
           return {
             type: 'updated',
             vaultId: parsedJson.vault_id,
@@ -514,9 +537,11 @@ export class SuiService {
             version: parsedJson.version,
             timestamp: parsedJson.timestamp,
           };
-        
-        default:
+        }
+
+        default: {
           return null;
+        }
       }
     } catch (error) {
       console.error('Failed to parse vault event:', error);
@@ -525,38 +550,7 @@ export class SuiService {
   }
 }
 
-// 类型定义
-export interface VaultInfo {
-  id: string;
-  owner: string;
-  name: string;
-  walrusBlobId: string;
-  version: number;
-  createdAt: number;
-  updatedAt: number;
-  settings: {
-    autoLockTimeout: number;
-    maxItems: number;
-    enableSharing: boolean;
-    require2fa: boolean;
-    backupEnabled: boolean;
-  };
-}
-
-export interface VaultEvent {
-  type: 'created' | 'updated' | 'shared' | 'revoked';
-  vaultId: string;
-  timestamp: number;
-  [key: string]: any;
-}
-
-export interface NetworkInfo {
-  network: string;
-  checkpoint: number;
-  protocolVersion: number;
-  chainId: string;
-  systemStateVersion: number;
-}
+// 类型定义（从 src/types/sui.ts 导入）
 
 // 权限常量
 export const PERMISSIONS = {

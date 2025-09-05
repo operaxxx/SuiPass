@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🚀 Running pre-push checks..."
+
+# 运行完整的测试套件
+echo "🧪 Running full test suite..."
+pnpm test:coverage
+
+# 检查构建是否成功
+echo "🏗️ Checking build..."
+pnpm build
+
+# 运行 E2E 测试（如果配置了）
+if [ -f "playwright.config.ts" ]; then
+  echo "🎭 Running E2E tests..."
+  pnpm test:e2e
+fi
+
+echo "✅ All pre-push checks passed!"

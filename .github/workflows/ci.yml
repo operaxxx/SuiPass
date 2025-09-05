@@ -2,185 +2,185 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main, develop]
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Target environment'
+        description: "Target environment"
         required: true
-        default: 'testnet'
+        default: "testnet"
         type: choice
         options: [local, testnet, mainnet]
 
 env:
-  NODE_VERSION: '20'
-  RUST_VERSION: 'stable'
-  SUI_VERSION: 'mainnet'
+  NODE_VERSION: "20"
+  RUST_VERSION: "stable"
+  SUI_VERSION: "mainnet"
 
 jobs:
   # Linting and Code Quality
   lint:
     runs-on: ubuntu-latest
     name: Code Quality
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'pnpm'
-    
-    - name: Install pnpm
-      uses: pnpm/action-setup@v3
-      with:
-        version: 8
-        run_install: false
-    
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-    
-    - name: Setup pnpm cache
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
-    
-    - name: Install dependencies
-      run: pnpm bootstrap
-    
-    - name: Run ESLint
-      run: pnpm lint
-    
-    - name: Run TypeScript type checking
-      run: pnpm type-check
-    
-    - name: Format check
-      run: pnpm format:check
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm bootstrap
+
+      - name: Run ESLint
+        run: pnpm lint
+
+      - name: Run TypeScript type checking
+        run: pnpm type-check
+
+      - name: Format check
+        run: pnpm format:check
 
   # Security Scanning
   security:
     runs-on: ubuntu-latest
     name: Security Scan
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'pnpm'
-    
-    - name: Install pnpm
-      uses: pnpm/action-setup@v3
-      with:
-        version: 8
-        run_install: false
-    
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-    
-    - name: Setup pnpm cache
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
-    
-    - name: Install dependencies
-      run: pnpm bootstrap
-    
-    - name: Run npm audit
-      run: pnpm audit
-    
-    - name: Run security scan with npm audit
-      run: npm audit --audit-level moderate
-    
-    - name: Run Sui Move security checks
-      run: |
-        cd packages/contracts
-        pnpm lint
-        pnpm security:check
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm bootstrap
+
+      - name: Run npm audit
+        run: pnpm audit
+
+      - name: Run security scan with npm audit
+        run: npm audit --audit-level moderate
+
+      - name: Run Sui Move security checks
+        run: |
+          cd packages/contracts
+          pnpm lint
+          pnpm security:check
 
   # Frontend Testing
   test-frontend:
     runs-on: ubuntu-latest
     name: Frontend Tests
     needs: [lint, security]
-    
+
     strategy:
       matrix:
         network: [local, testnet]
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'pnpm'
-    
-    - name: Install pnpm
-      uses: pnpm/action-setup@v3
-      with:
-        version: 8
-        run_install: false
-    
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-    
-    - name: Setup pnpm cache
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
-    
-    - name: Install dependencies
-      run: pnpm bootstrap
-    
-    - name: Set up environment for ${{ matrix.network }}
-      run: |
-        echo "VITE_SUI_NETWORK=${{ matrix.network }}" >> packages/frontend/.env
-        echo "VITE_ENABLE_LOCAL_MODE=${{ matrix.network == 'local' }}" >> packages/frontend/.env
-    
-    - name: Run unit tests
-      run: pnpm test
-    
-    - name: Run tests with coverage
-      run: pnpm test:coverage
-    
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage/lcov.info
-        flags: frontend
-        name: frontend-coverage
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm bootstrap
+
+      - name: Set up environment for ${{ matrix.network }}
+        run: |
+          echo "VITE_SUI_NETWORK=${{ matrix.network }}" >> packages/frontend/.env
+          echo "VITE_ENABLE_LOCAL_MODE=${{ matrix.network == 'local' }}" >> packages/frontend/.env
+
+      - name: Run unit tests
+        run: pnpm test
+
+      - name: Run tests with coverage
+        run: pnpm test:coverage
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
 
   # Contract Testing with Matrix
   test-contracts:
     runs-on: ubuntu-latest
     name: Contract Tests (${{ matrix.network }})
     needs: [lint, security]
-    
+
     strategy:
       matrix:
         network: [local, testnet]
@@ -191,256 +191,256 @@ jobs:
           - network: testnet
             sui_network: testnet
             deploy_script: testnet:deploy
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install Sui CLI
-      run: |
-        curl -s https://install.sui.dev | sh
-        echo ~/.local/bin >> $GITHUB_PATH
-    
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@v1
-      with:
-        toolchain: ${{ env.RUST_VERSION }}
-        components: rustfmt, clippy
-    
-    - name: Use Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'pnpm'
-    
-    - name: Install pnpm
-      uses: pnpm/action-setup@v3
-      with:
-        version: 8
-        run_install: false
-    
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-    
-    - name: Setup pnpm cache
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
-    
-    - name: Install dependencies
-      run: pnpm bootstrap
-    
-    - name: Start local Sui network (if local)
-      if: matrix.network == 'local'
-      run: |
-        sui start --background
-        sleep 10
-    
-    - name: Build contracts
-      run: |
-        cd packages/contracts
-        pnpm build
-    
-    - name: Run contract tests
-      run: |
-        cd packages/contracts
-        pnpm test
-    
-    - name: Generate test coverage
-      run: |
-        cd packages/contracts
-        pnpm coverage
-    
-    - name: Extract gas usage
-      run: |
-        cd packages/contracts
-        pnpm test:gas
-    
-    - name: Upload gas usage report
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: gas-usage-${{ matrix.network }}
-        path: packages/contracts/reports/gas-usage.json
-    
-    - name: Verify contract deployment
-      run: |
-        cd packages/contracts
-        pnpm ${{ matrix.deploy_script }} --dry-run
+      - uses: actions/checkout@v4
+
+      - name: Install Sui CLI
+        run: |
+          curl -s https://install.sui.dev | sh
+          echo ~/.local/bin >> $GITHUB_PATH
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt, clippy
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm bootstrap
+
+      - name: Start local Sui network (if local)
+        if: matrix.network == 'local'
+        run: |
+          sui start --background
+          sleep 10
+
+      - name: Build contracts
+        run: |
+          cd packages/contracts
+          pnpm build
+
+      - name: Run contract tests
+        run: |
+          cd packages/contracts
+          pnpm test
+
+      - name: Generate test coverage
+        run: |
+          cd packages/contracts
+          pnpm coverage
+
+      - name: Extract gas usage
+        run: |
+          cd packages/contracts
+          pnpm test:gas
+
+      - name: Upload gas usage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gas-usage-${{ matrix.network }}
+          path: packages/contracts/reports/gas-usage.json
+
+      - name: Verify contract deployment
+        run: |
+          cd packages/contracts
+          pnpm ${{ matrix.deploy_script }} --dry-run
 
   # E2E Testing
   test-e2e:
     runs-on: ubuntu-latest
     name: E2E Tests
     needs: [test-frontend, test-contracts]
-    
+
     strategy:
       matrix:
         browser: [chromium, firefox]
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'pnpm'
-    
-    - name: Install pnpm
-      uses: pnpm/action-setup@v3
-      with:
-        version: 8
-        run_install: false
-    
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-    
-    - name: Setup pnpm cache
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
-    
-    - name: Install dependencies
-      run: pnpm bootstrap
-    
-    - name: Build project
-      run: pnpm build
-    
-    - name: Install Playwright browsers
-      run: pnpm test:e2e:install
-    
-    - name: Run E2E tests
-      run: pnpm test:e2e -- --browser=${{ matrix.browser }}
-    
-    - name: Upload E2E test results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: e2e-results-${{ matrix.browser }}
-        path: test-results/
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm bootstrap
+
+      - name: Build project
+        run: pnpm build
+
+      - name: Install Playwright browsers
+        run: pnpm test:e2e:install
+
+      - name: Run E2E tests
+        run: pnpm test:e2e -- --browser=${{ matrix.browser }}
+
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-results-${{ matrix.browser }}
+          path: test-results/
 
   # Performance Benchmarking
   performance:
     runs-on: ubuntu-latest
     name: Performance Benchmarks
     needs: [test-frontend, test-contracts]
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'pnpm'
-    
-    - name: Install pnpm
-      uses: pnpm/action-setup@v3
-      with:
-        version: 8
-        run_install: false
-    
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-    
-    - name: Setup pnpm cache
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
-    
-    - name: Install dependencies
-      run: pnpm bootstrap
-    
-    - name: Run performance benchmarks
-      run: |
-        cd packages/frontend
-        pnpm test:performance
-    
-    - name: Generate performance report
-      run: |
-        cd packages/contracts
-        pnpm benchmark
-    
-    - name: Upload performance results
-      uses: actions/upload-artifact@v4
-      with:
-        name: performance-results
-        path: |
-          packages/frontend/reports/performance.json
-          packages/contracts/reports/benchmark.json
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm bootstrap
+
+      - name: Run performance benchmarks
+        run: |
+          cd packages/frontend
+          pnpm test:performance
+
+      - name: Generate performance report
+        run: |
+          cd packages/contracts
+          pnpm benchmark
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: |
+            packages/frontend/reports/performance.json
+            packages/contracts/reports/benchmark.json
 
   # Build and Upload Artifacts
   build:
     runs-on: ubuntu-latest
     name: Build Artifacts
     needs: [test-frontend, test-contracts, test-e2e]
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'pnpm'
-    
-    - name: Install pnpm
-      uses: pnpm/action-setup@v3
-      with:
-        version: 8
-        run_install: false
-    
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-    
-    - name: Setup pnpm cache
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
-    
-    - name: Install dependencies
-      run: pnpm bootstrap
-    
-    - name: Build frontend
-      run: pnpm build
-    
-    - name: Build contracts
-      run: |
-        cd packages/contracts
-        pnpm build
-    
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-artifacts
-        path: |
-          packages/frontend/dist/
-          packages/contracts/build/
-          packages/contracts/abis/
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm bootstrap
+
+      - name: Build frontend
+        run: pnpm build
+
+      - name: Build contracts
+        run: |
+          cd packages/contracts
+          pnpm build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            packages/frontend/dist/
+            packages/contracts/build/
+            packages/contracts/abis/
 
   # Contract Deployment
   deploy-contracts:
@@ -448,73 +448,73 @@ jobs:
     name: Deploy Contracts
     needs: [build]
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
-    
+
     environment: ${{ github.event.inputs.environment || 'testnet' }}
-    
+
     env:
       environment: ${{ github.event.inputs.environment || 'testnet' }}
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install Sui CLI
-      run: |
-        curl -s https://install.sui.dev | sh
-        echo ~/.local/bin >> $GITHUB_PATH
-    
-    - name: Use Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'pnpm'
-    
-    - name: Install pnpm
-      uses: pnpm/action-setup@v3
-      with:
-        version: 8
-        run_install: false
-    
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-    
-    - name: Setup pnpm cache
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
-    
-    - name: Install dependencies
-      run: pnpm bootstrap
-    
-    - name: Download build artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: build-artifacts
-        path: artifacts/
-    
-    - name: Deploy to ${{ env.environment }}
-      env:
-        SUI_NETWORK: ${{ env.environment }}
-        DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-      run: |
-        cd packages/contracts
-        pnpm deploy:${{ env.environment }}
-    
-    - name: Verify deployment
-      run: |
-        cd packages/contracts
-        pnpm verify:${{ env.environment }}
-    
-    - name: Upload deployment info
-      uses: actions/upload-artifact@v4
-      with:
-        name: deployment-info-${{ env.environment }}
-        path: packages/contracts/deployment/
+      - uses: actions/checkout@v4
+
+      - name: Install Sui CLI
+        run: |
+          curl -s https://install.sui.dev | sh
+          echo ~/.local/bin >> $GITHUB_PATH
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm bootstrap
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: artifacts/
+
+      - name: Deploy to ${{ env.environment }}
+        env:
+          SUI_NETWORK: ${{ env.environment }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        run: |
+          cd packages/contracts
+          pnpm deploy:${{ env.environment }}
+
+      - name: Verify deployment
+        run: |
+          cd packages/contracts
+          pnpm verify:${{ env.environment }}
+
+      - name: Upload deployment info
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-info-${{ env.environment }}
+          path: packages/contracts/deployment/
 
   # Frontend Deployment
   deploy-frontend:
@@ -522,64 +522,64 @@ jobs:
     name: Deploy Frontend
     needs: [build, deploy-contracts]
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
-    
+
     environment: ${{ github.event.inputs.environment || 'testnet' }}
-    
+
     env:
       environment: ${{ github.event.inputs.environment || 'testnet' }}
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'pnpm'
-    
-    - name: Install pnpm
-      uses: pnpm/action-setup@v3
-      with:
-        version: 8
-        run_install: false
-    
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-    
-    - name: Setup pnpm cache
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
-    
-    - name: Install dependencies
-      run: pnpm bootstrap
-    
-    - name: Download build artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: build-artifacts
-        path: artifacts/
-    
-    - name: Deploy to ${{ env.environment }}
-      env:
-        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-      run: |
-        # Copy built artifacts
-        cp -r artifacts/packages/frontend/dist/* dist/
-        
-        # Deploy to Netlify
-        npx netlify-cli deploy --prod --dir=dist
-    
-    - name: Create deployment status
-      run: |
-        echo "Deployment to ${{ env.environment }} completed successfully"
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm bootstrap
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: artifacts/
+
+      - name: Deploy to ${{ env.environment }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          # Copy built artifacts
+          cp -r artifacts/packages/frontend/dist/* dist/
+
+          # Deploy to Netlify
+          npx netlify-cli deploy --prod --dir=dist
+
+      - name: Create deployment status
+        run: |
+          echo "Deployment to ${{ env.environment }} completed successfully"
 
   # Documentation Update
   update-docs:
@@ -587,57 +587,57 @@ jobs:
     name: Update Documentation
     needs: [deploy-frontend]
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
-    - uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Use Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'pnpm'
-    
-    - name: Install pnpm
-      uses: pnpm/action-setup@v3
-      with:
-        version: 8
-        run_install: false
-    
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-    
-    - name: Setup pnpm cache
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
-    
-    - name: Install dependencies
-      run: pnpm bootstrap
-    
-    - name: Generate API documentation
-      run: |
-        pnpm docs:generate
-    
-    - name: Generate contract documentation
-      run: |
-        cd packages/contracts
-        pnpm docs:generate
-    
-    - name: Commit and push documentation
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add docs/
-        git diff --staged --quiet || git commit -m "docs: update API documentation [skip ci]"
-        git push
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm bootstrap
+
+      - name: Generate API documentation
+        run: |
+          pnpm docs:generate
+
+      - name: Generate contract documentation
+        run: |
+          cd packages/contracts
+          pnpm docs:generate
+
+      - name: Commit and push documentation
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add docs/
+          git diff --staged --quiet || git commit -m "docs: update API documentation [skip ci]"
+          git push
 
   # Notification
   notify:
@@ -645,22 +645,22 @@ jobs:
     name: Send Notification
     needs: [deploy-frontend, update-docs]
     if: always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
-    
+
     steps:
-    - name: Send success notification
-      if: needs.deploy-frontend.result == 'success'
-      uses: 8398a7/action-slack@v3
-      with:
-        status: success
-        text: 'Deployment completed successfully!'
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-    
-    - name: Send failure notification
-      if: needs.deploy-frontend.result == 'failure'
-      uses: 8398a7/action-slack@v3
-      with:
-        status: failure
-        text: 'Deployment failed!'
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Send success notification
+        if: needs.deploy-frontend.result == 'success'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          text: "Deployment completed successfully!"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Send failure notification
+        if: needs.deploy-frontend.result == 'failure'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: "Deployment failed!"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

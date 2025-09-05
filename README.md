@@ -10,24 +10,28 @@ SuiPass 是一个基于 Sui 区块链和 Walrus 存储的去中心化密码管�
 ## ✨ 核心特性
 
 ### 🔐 安全特性
+
 - **端到端加密**: 使用 AES-256-GCM 加密所有数据，密钥永不离开设备
 - **零知识架构**: 最小化链上数据，服务器无法访问任何明文数据
 - **Argon2id**: 内存硬的密钥派生函数，防止暴力破解
 - **前向安全**: 每次更新生成新的加密 blob，旧数据无法被访问
 
 ### 🌐 去中心化
+
 - **Sui 身份层**: 利用 Sui 管理身份验证和所有权确认
 - **Walrus 存储层**: 去中心化存储，成本仅为 Sui 的 1/100
 - **zkLogin 集成**: 支持 Web2 账户无缝登录，无需管理私钥
 - **能力模型**: 基于对象的访问控制，精细化管理权限
 
 ### 🚀 用户体验
+
 - **渐进式去中心化**: 从本地模式平滑过渡到去中心化模式
 - **即时响应**: 本地缓存 + 异步同步，提供毫秒级响应
 - **智能同步**: 增量同步，最小化带宽消耗
 - **离线优先**: 完整的离线支持，网络恢复后自动同步
 
 ### 💡 创新设计
+
 - **分层架构**: Sui 负责身份，Walrus 负责存储，各司其职
 - **固定成本**: 无论数据量大小，更新成本固定且低廉
 - **版本控制**: 完整的历史记录，支持回滚和审计
@@ -168,11 +172,13 @@ npm run contract:build
 ### 环境准备
 
 1. **安装 Sui CLI**（用于合约开发）
+
 ```bash
 cargo install --git https://github.com/MystenLabs/sui --branch main sui
 ```
 
 2. **启动本地开发网络**
+
 ```bash
 sui start
 ```
@@ -245,12 +251,14 @@ npm run test:walrus
 #### 1. 添加新功能
 
 **前端功能**:
+
 - 在 `packages/frontend/src/components/` 中添加组件
 - 在 `packages/frontend/src/services/` 中添加服务
 - 更新 `packages/frontend/src/types/` 中的类型定义
 - 编写相应的单元测试和集成测试
 
 **智能合约功能**:
+
 - 在 `packages/contracts/sources/suipass/` 中编写 Move 代码
 - 在 `packages/contracts/tests/` 中添加测试用例
 - 更新部署脚本（如需要）
@@ -258,6 +266,7 @@ npm run test:walrus
 #### 2. 数据流设计
 
 开发新功能时请遵循以下数据流：
+
 1. **创建/更新**: 客户端加密 → Walrus 存储 → Sui 更新引用
 2. **读取**: Sui 验证权限 → Walrus 获取数据 → 客户端解密
 3. **权限管理**: Sui 创建/转移能力对象
@@ -272,6 +281,7 @@ npm run test:walrus
 ### 常见任务
 
 #### 运行完整的测试套件
+
 ```bash
 # 根目录运行所有测试
 npm test
@@ -284,6 +294,7 @@ npm run contract:test
 ```
 
 #### 代码质量检查
+
 ```bash
 # 检查所有包
 npm run lint
@@ -298,16 +309,19 @@ npm run type-check
 ## 📚 文档
 
 ### 核心文档
+
 - [产品需求文档](docs/PRD.md) - 完整的产品需求和技术架构
 - [开发计划](docs/DEVELOPMENT_PLAN.md) - 整体开发策略和路线图
 - [第一阶段计划](docs/PHASE1_PLAN.md) - 详细的 Phase 1 实施计划
 
 ### 技术文档
+
 - [架构设计](docs/architecture/) - 分层架构详细说明
 - [API 参考](docs/api/) - 前端和合约 API 文档
 - [部署指南](docs/deployment/) - 环境搭建和部署流程
 
 ### 开发指南
+
 - [UI/UX 设计系统](docs/UI-UX-Design-System.md)
 - [UI 原型示例](docs/UI-Prototype-Examples.md)
 - [本地模式原型](docs/UI-Prototype-Local-Mode.md)
@@ -316,24 +330,28 @@ npm run type-check
 ## 🛡️ 安全最佳实践
 
 ### 数据加密
+
 - **端到端加密**: 所有敏感数据使用 AES-256-GCM 加密，密钥永不离开设备
 - **密钥派生**: 使用 Argon2id 从主密码派生加密密钥
 - **密钥管理**: 支持密钥轮换和紧急恢复机制
 - **安全删除**: 敏感数据使用安全擦除，内存数据立即清除
 
 ### 智能合约安全
+
 - **最小化原则**: Sui 合约只管理必要的身份和权限信息
 - **访问控制**: 基于能力模型的细粒度权限管理
 - **形式化验证**: 利用 Move 语言的安全特性进行验证
 - **定期审计**: 定期进行代码审计和安全测试
 
 ### 网络安全
+
 - **通信安全**: 所有通信使用 HTTPS 和 TLS 1.3
 - **内容安全**: 实施 CSP (Content Security Policy) 防止 XSS
 - **依赖管理**: 定期更新依赖项，使用安全扫描工具
 - **速率限制**: 防止暴力破解和 DDoS 攻击
 
 ### 隐私保护
+
 - **数据最小化**: 只收集和存储必要的信息
 - **匿名化**: 支持使用 zkLogin 等匿名登录方式
 - **用户控制**: 用户完全控制自己的数据和共享权限

@@ -1,0 +1,196 @@
+name: Performance Monitoring
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: "0 6 * * *" # Daily at 6 AM UTC
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  # Frontend Performance
+  frontend-performance:
+    runs-on: ubuntu-latest
+    name: Frontend Performance
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm bootstrap
+
+      - name: Build project
+        run: pnpm build
+
+      - name: Run performance benchmarks
+        run: pnpm test:performance
+
+      - name: Analyze bundle size
+        run: |
+          cd packages/frontend
+          pnpm analyze:bundle
+
+      - name: Generate performance report
+        run: |
+          cd packages/frontend
+          pnpm performance:report
+
+      - name: Upload performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-performance
+          path: |
+            packages/frontend/reports/performance.json
+            packages/frontend/reports/bundle-analysis.json
+
+  # Contract Performance
+  contract-performance:
+    runs-on: ubuntu-latest
+    name: Contract Performance
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Sui CLI
+        run: |
+          curl -s https://install.sui.dev | sh
+          echo ~/.local/bin >> $GITHUB_PATH
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm bootstrap
+
+      - name: Run contract benchmarks
+        run: |
+          cd packages/contracts
+          pnpm benchmark
+
+      - name: Analyze gas usage
+        run: |
+          cd packages/contracts
+          pnpm gas:analysis
+
+      - name: Generate performance report
+        run: |
+          cd packages/contracts
+          pnpm performance:report
+
+      - name: Upload contract performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-performance
+          path: |
+            packages/contracts/reports/benchmark.json
+            packages/contracts/reports/gas-analysis.json
+
+  # Performance Regression Check
+  regression-check:
+    runs-on: ubuntu-latest
+    name: Performance Regression Check
+    needs: [frontend-performance, contract-performance]
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download performance reports
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-performance
+          path: performance-reports/
+
+      - name: Download contract performance reports
+        uses: actions/download-artifact@v4
+        with:
+          name: contract-performance
+          path: contract-reports/
+
+      - name: Check for performance regressions
+        run: |
+          # Check frontend performance
+          if [ -f "performance-reports/performance.json" ]; then
+            echo "Checking frontend performance regressions..."
+            # Add your regression checking logic here
+          fi
+
+          # Check contract gas usage
+          if [ -f "contract-reports/gas-analysis.json" ]; then
+            echo "Checking contract gas regressions..."
+            # Add your gas regression checking logic here
+          fi
+
+          echo "Performance regression check completed"
+
+      - name: Comment on PR if regression detected
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ **Performance Regression Detected**\n\nThe latest changes have introduced performance regressions. Please review the performance reports and optimize the code before merging.'
+            })

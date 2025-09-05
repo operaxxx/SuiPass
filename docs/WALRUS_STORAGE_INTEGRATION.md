@@ -22,17 +22,17 @@ graph TB
     B --> C[加密层]
     C --> D[Walrus Client]
     D --> E[Walrus Network]
-    
+
     A --> F[智能合约层]
     F --> G[VaultRegistry]
     F --> H[AccessControl]
-    
+
     B --> I[本地缓存]
     I --> J[IndexedDB]
-    
+
     C --> K[密钥管理]
     K --> L[Argon2id]
-    
+
     E --> M[Blob 存储]
     M --> N[版本控制]
     N --> O[增量更新]
@@ -48,7 +48,7 @@ sequenceDiagram
     participant W as Walrus 存储
     participant S as 智能合约
     participant C as 缓存
-    
+
     U->>F: 创建/更新保险库
     F->>E: 加密数据
     E-->>F: 返回加密数据
@@ -58,7 +58,7 @@ sequenceDiagram
     S-->>F: 交易确认
     F->>C: 更新缓存
     F-->>U: 操作完成
-    
+
     U->>F: 访问保险库
     F->>C: 检查缓存
     alt 缓存命中
@@ -138,18 +138,18 @@ interface PasswordItem {
 interface CustomField {
   name: string;
   value: string;
-  type: 'text' | 'password' | 'number' | 'date' | 'url';
+  type: "text" | "password" | "number" | "date" | "url";
   protected: boolean;
 }
 
 // 加密信息
 interface EncryptionInfo {
-  algorithm: 'AES-256-GCM';
+  algorithm: "AES-256-GCM";
   key_id: string;
   iv: string;
   version: number;
   key_derivation: {
-    algorithm: 'Argon2id';
+    algorithm: "Argon2id";
     iterations: number;
     memory: number;
     parallelism: number;
@@ -159,7 +159,7 @@ interface EncryptionInfo {
 
 // 压缩信息
 interface CompressionInfo {
-  algorithm: 'gzip' | 'brotli';
+  algorithm: "gzip" | "brotli";
   ratio: number;
   original_size: number;
   compressed_size: number;
@@ -179,8 +179,8 @@ interface DeltaUpdate {
 
 // 变更记录
 interface Change {
-  type: 'create' | 'update' | 'delete';
-  entity: 'password' | 'folder';
+  type: "create" | "update" | "delete";
+  entity: "password" | "folder";
   id: string;
   data?: any;
   timestamp: number;
@@ -188,11 +188,11 @@ interface Change {
 
 // 版本策略
 interface VersionStrategy {
-  full_version_interval: number;     // 全量版本间隔
-  max_delta_versions: number;        // 最大增量版本数
-  max_total_versions: number;       // 最大总版本数
+  full_version_interval: number; // 全量版本间隔
+  max_delta_versions: number; // 最大增量版本数
+  max_total_versions: number; // 最大总版本数
   compression: {
-    min_size_threshold: number;      // 最小压缩阈值
+    min_size_threshold: number; // 最小压缩阈值
     compression_ratio_threshold: number; // 压缩比阈值
   };
 }
@@ -202,12 +202,12 @@ interface VersionStrategy {
 
 ```typescript
 interface BlobSharding {
-  shardSize: number;                 // 分片大小
-  maxParallelUploads: number;        // 最大并行上传数
-  hashAlgorithm: 'SHA-256' | 'SHA-512'; // 哈希算法
+  shardSize: number; // 分片大小
+  maxParallelUploads: number; // 最大并行上传数
+  hashAlgorithm: "SHA-256" | "SHA-512"; // 哈希算法
   redundancy: {
-    parityShards: number;            // 校验分片数
-    dataShards: number;              // 数据分片数
+    parityShards: number; // 校验分片数
+    dataShards: number; // 数据分片数
   };
 }
 
@@ -227,10 +227,10 @@ interface BlobShard {
 
 ```typescript
 // packages/frontend/src/services/walrus.ts
-import { WalrusClient } from '@mysten/walrus';
-import { EncryptionService } from './encryption';
-import { CacheService } from './cache';
-import { VaultBlob, DeltaUpdate } from '../types/walrus';
+import { WalrusClient } from "@mysten/walrus";
+import { EncryptionService } from "./encryption";
+import { CacheService } from "./cache";
+import { VaultBlob, DeltaUpdate } from "../types/walrus";
 
 export class WalrusStorageService {
   private client: WalrusClient;
@@ -241,7 +241,7 @@ export class WalrusStorageService {
 
   constructor() {
     this.client = new WalrusClient({
-      network: process.env.VITE_WALRUS_NETWORK || 'testnet',
+      network: process.env.VITE_WALRUS_NETWORK || "testnet",
       rpcUrl: process.env.VITE_WALRUS_RPC_URL,
     });
     this.encryption = new EncryptionService();
@@ -255,23 +255,23 @@ export class WalrusStorageService {
     try {
       // 1. 验证数据完整性
       this.validateVault(vault);
-      
+
       // 2. 压缩数据
       const compressed = await this.compressVault(vault);
-      
+
       // 3. 加密数据
       const encrypted = await this.encryption.encrypt(compressed);
-      
+
       // 4. 上传到 Walrus
       const blobId = await this.uploadWithRetry(encrypted);
-      
+
       // 5. 更新缓存
       await this.cache.setVault(blobId, vault);
-      
+
       return blobId;
     } catch (error) {
-      console.error('Failed to upload vault:', error);
-      throw new Error('Vault upload failed');
+      console.error("Failed to upload vault:", error);
+      throw new Error("Vault upload failed");
     }
   }
 
@@ -285,26 +285,26 @@ export class WalrusStorageService {
       if (cached) {
         return cached;
       }
-      
+
       // 2. 从 Walrus 下载
       const encrypted = await this.downloadWithRetry(blobId);
-      
+
       // 3. 解密数据
       const decrypted = await this.encryption.decrypt(encrypted);
-      
+
       // 4. 解压数据
       const vault = await this.decompressVault(decrypted);
-      
+
       // 5. 验证数据完整性
       this.validateVault(vault);
-      
+
       // 6. 更新缓存
       await this.cache.setVault(blobId, vault);
-      
+
       return vault;
     } catch (error) {
-      console.error('Failed to download vault:', error);
-      throw new Error('Vault download failed');
+      console.error("Failed to download vault:", error);
+      throw new Error("Vault download failed");
     }
   }
 
@@ -313,7 +313,7 @@ export class WalrusStorageService {
    */
   async createDeltaUpdate(
     currentVault: VaultBlob,
-    previousVault: VaultBlob
+    previousVault: VaultBlob,
   ): Promise<DeltaUpdate> {
     const changes = this.calculateChanges(currentVault, previousVault);
     const delta: DeltaUpdate = {
@@ -322,7 +322,7 @@ export class WalrusStorageService {
       changes,
       checksum: await this.generateChecksum(changes),
     };
-    
+
     return delta;
   }
 
@@ -331,12 +331,12 @@ export class WalrusStorageService {
    */
   async applyDeltaUpdate(
     baseVault: VaultBlob,
-    delta: DeltaUpdate
+    delta: DeltaUpdate,
   ): Promise<VaultBlob> {
     const updatedVault = this.applyChanges(baseVault, delta.changes);
     updatedVault.version = delta.version;
     updatedVault.updated_at = Date.now();
-    
+
     return updatedVault;
   }
 
@@ -345,7 +345,7 @@ export class WalrusStorageService {
    */
   private async uploadWithRetry(data: Uint8Array): Promise<string> {
     let lastError: Error;
-    
+
     for (let attempt = 0; attempt < this.retryAttempts; attempt++) {
       try {
         const blobId = await this.client.uploadBlob({
@@ -356,13 +356,13 @@ export class WalrusStorageService {
       } catch (error) {
         lastError = error as Error;
         console.warn(`Upload attempt ${attempt + 1} failed:`, error);
-        
+
         if (attempt < this.retryAttempts - 1) {
           await this.delay(1000 * Math.pow(2, attempt)); // 指数退避
         }
       }
     }
-    
+
     throw lastError!;
   }
 
@@ -371,7 +371,7 @@ export class WalrusStorageService {
    */
   private async downloadWithRetry(blobId: string): Promise<Uint8Array> {
     let lastError: Error;
-    
+
     for (let attempt = 0; attempt < this.retryAttempts; attempt++) {
       try {
         const blob = await this.client.downloadBlob(blobId);
@@ -379,13 +379,13 @@ export class WalrusStorageService {
       } catch (error) {
         lastError = error as Error;
         console.warn(`Download attempt ${attempt + 1} failed:`, error);
-        
+
         if (attempt < this.retryAttempts - 1) {
           await this.delay(1000 * Math.pow(2, attempt));
         }
       }
     }
-    
+
     throw lastError!;
   }
 
@@ -396,9 +396,9 @@ export class WalrusStorageService {
     const jsonString = JSON.stringify(vault);
     const encoder = new TextEncoder();
     const data = encoder.encode(jsonString);
-    
+
     // 使用 Brotli 压缩
-    const compressed = new CompressionStream('gzip');
+    const compressed = new CompressionStream("gzip");
     // 实际压缩实现
     return data; // 简化实现
   }
@@ -408,7 +408,7 @@ export class WalrusStorageService {
    */
   private async decompressVault(data: Uint8Array): Promise<VaultBlob> {
     // 使用 Gzip 解压
-    const decompressed = new DecompressionStream('gzip');
+    const decompressed = new DecompressionStream("gzip");
     // 实际解压实现
     const decoder = new TextDecoder();
     const jsonString = decoder.decode(data);
@@ -420,22 +420,22 @@ export class WalrusStorageService {
    */
   private validateVault(vault: VaultBlob): void {
     if (!vault.metadata || !vault.metadata.id) {
-      throw new Error('Invalid vault metadata');
+      throw new Error("Invalid vault metadata");
     }
-    
+
     if (!vault.checksum) {
-      throw new Error('Missing vault checksum');
+      throw new Error("Missing vault checksum");
     }
-    
+
     // 验证版本号
     if (vault.version <= 0) {
-      throw new Error('Invalid vault version');
+      throw new Error("Invalid vault version");
     }
-    
+
     // 验证数据大小
     const estimatedSize = JSON.stringify(vault).length;
     if (estimatedSize > this.maxBlobSize) {
-      throw new Error('Vault size exceeds maximum limit');
+      throw new Error("Vault size exceeds maximum limit");
     }
   }
 
@@ -444,43 +444,45 @@ export class WalrusStorageService {
    */
   private calculateChanges(current: VaultBlob, previous: VaultBlob): Change[] {
     const changes: Change[] = [];
-    
+
     // 计算密码变更
-    const passwordMap = new Map(previous.passwords.map(p => [p.id, p]));
+    const passwordMap = new Map(previous.passwords.map((p) => [p.id, p]));
     for (const password of current.passwords) {
       const previousPassword = passwordMap.get(password.id);
       if (!previousPassword) {
         changes.push({
-          type: 'create',
-          entity: 'password',
+          type: "create",
+          entity: "password",
           id: password.id,
           data: password,
           timestamp: Date.now(),
         });
-      } else if (JSON.stringify(password) !== JSON.stringify(previousPassword)) {
+      } else if (
+        JSON.stringify(password) !== JSON.stringify(previousPassword)
+      ) {
         changes.push({
-          type: 'update',
-          entity: 'password',
+          type: "update",
+          entity: "password",
           id: password.id,
           data: password,
           timestamp: Date.now(),
         });
       }
     }
-    
+
     // 检测删除的密码
-    const currentPasswordIds = new Set(current.passwords.map(p => p.id));
+    const currentPasswordIds = new Set(current.passwords.map((p) => p.id));
     for (const password of previous.passwords) {
       if (!currentPasswordIds.has(password.id)) {
         changes.push({
-          type: 'delete',
-          entity: 'password',
+          type: "delete",
+          entity: "password",
           id: password.id,
           timestamp: Date.now(),
         });
       }
     }
-    
+
     return changes;
   }
 
@@ -489,13 +491,15 @@ export class WalrusStorageService {
    */
   private applyChanges(baseVault: VaultBlob, changes: Change[]): VaultBlob {
     const updatedVault = JSON.parse(JSON.stringify(baseVault));
-    
+
     for (const change of changes) {
       switch (change.type) {
-        case 'create':
-        case 'update':
-          if (change.entity === 'password') {
-            const index = updatedVault.passwords.findIndex(p => p.id === change.id);
+        case "create":
+        case "update":
+          if (change.entity === "password") {
+            const index = updatedVault.passwords.findIndex(
+              (p) => p.id === change.id,
+            );
             if (index >= 0) {
               updatedVault.passwords[index] = change.data;
             } else {
@@ -503,14 +507,16 @@ export class WalrusStorageService {
             }
           }
           break;
-        case 'delete':
-          if (change.entity === 'password') {
-            updatedVault.passwords = updatedVault.passwords.filter(p => p.id !== change.id);
+        case "delete":
+          if (change.entity === "password") {
+            updatedVault.passwords = updatedVault.passwords.filter(
+              (p) => p.id !== change.id,
+            );
           }
           break;
       }
     }
-    
+
     return updatedVault;
   }
 
@@ -521,13 +527,13 @@ export class WalrusStorageService {
     const jsonString = JSON.stringify(data);
     const encoder = new TextEncoder();
     const dataBuffer = encoder.encode(jsonString);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", dataBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 ```
@@ -536,40 +542,43 @@ export class WalrusStorageService {
 
 ```typescript
 // packages/frontend/src/services/encryption.ts
-import * as argon2 from 'argon2-browser';
+import * as argon2 from "argon2-browser";
 
 export class EncryptionService {
-  private algorithm = 'AES-256-GCM';
-  private keyDerivationAlgorithm = 'Argon2id';
+  private algorithm = "AES-256-GCM";
+  private keyDerivationAlgorithm = "Argon2id";
   private keyLength = 256; // bits
   private ivLength = 12; // bytes for GCM
 
   /**
    * 加密数据
    */
-  async encrypt(data: Uint8Array, masterPassword: string): Promise<EncryptedData> {
+  async encrypt(
+    data: Uint8Array,
+    masterPassword: string,
+  ): Promise<EncryptedData> {
     try {
       // 1. 生成加密密钥
       const key = await this.deriveKey(masterPassword);
-      
+
       // 2. 生成 IV
       const iv = crypto.getRandomValues(new Uint8Array(this.ivLength));
-      
+
       // 3. 加密数据
       const encryptedData = await crypto.subtle.encrypt(
         {
-          name: 'AES-GCM',
+          name: "AES-GCM",
           iv,
         },
         key,
-        data
+        data,
       );
-      
+
       // 4. 提取认证标签
       const encryptedArray = new Uint8Array(encryptedData);
       const tag = encryptedArray.slice(-16); // GCM tag is 16 bytes
       const ciphertext = encryptedArray.slice(0, -16);
-      
+
       return {
         algorithm: this.algorithm,
         ciphertext: Array.from(ciphertext),
@@ -578,43 +587,46 @@ export class EncryptionService {
         keyId: await this.getKeyId(key),
       };
     } catch (error) {
-      console.error('Encryption failed:', error);
-      throw new Error('Failed to encrypt data');
+      console.error("Encryption failed:", error);
+      throw new Error("Failed to encrypt data");
     }
   }
 
   /**
    * 解密数据
    */
-  async decrypt(encryptedData: EncryptedData, masterPassword: string): Promise<Uint8Array> {
+  async decrypt(
+    encryptedData: EncryptedData,
+    masterPassword: string,
+  ): Promise<Uint8Array> {
     try {
       // 1. 派生密钥
       const key = await this.deriveKey(masterPassword);
-      
+
       // 2. 准备数据
       const ciphertext = new Uint8Array(encryptedData.ciphertext);
       const iv = new Uint8Array(encryptedData.iv);
       const tag = new Uint8Array(encryptedData.tag);
-      
+
       // 3. 合并密文和标签
       const encryptedWithTag = new Uint8Array(ciphertext.length + tag.length);
       encryptedWithTag.set(ciphertext);
       encryptedWithTag.set(tag, ciphertext.length);
-      
+
       // 4. 解密
       const decrypted = await crypto.subtle.decrypt(
         {
-          name: 'AES-GCM',
+          name: "AES-GCM",
           iv,
         },
         key,
-        encryptedWithTag
+        encryptedWithTag,
       );
-      
+
       return new Uint8Array(decrypted);
     } catch (error) {
-      console.error('Decryption failed:', error);
-      throw new Error('Failed to decrypt data');
+      console.error("Decryption failed:", error);
+      throw new Error("Failed to decrypt data");
     }
   }
 
@@ -630,21 +642,21 @@ export class EncryptionService {
         salt: Array.from(salt),
         type: argon2.ArgonType.Argon2id,
         mem: 65536, // 64MB
-        time: 3,    // 3 iterations
+        time: 3, // 3 iterations
         hashLen: this.keyLength / 8,
       });
-      
+
       // 导入为 CryptoKey
       return crypto.subtle.importKey(
-        'raw',
+        "raw",
         new Uint8Array(derivedKey.hash),
-        { name: 'AES-GCM' },
+        { name: "AES-GCM" },
         false,
-        ['encrypt', 'decrypt']
+        ["encrypt", "decrypt"],
       );
     } catch (error) {
-      console.error('Key derivation failed:', error);
-      throw new Error('Failed to derive encryption key');
+      console.error("Key derivation failed:", error);
+      throw new Error("Failed to derive encryption key");
     }
   }
 
@@ -652,10 +664,10 @@ export class EncryptionService {
    * 获取密钥ID
    */
   private async getKeyId(key: CryptoKey): Promise<string> {
-    const rawKey = await crypto.subtle.exportKey('raw', key);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', rawKey);
+    const rawKey = await crypto.subtle.exportKey("raw", key);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", rawKey);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
   }
 
   /**
@@ -664,7 +676,7 @@ export class EncryptionService {
   async verifyPasswordStrength(password: string): Promise<PasswordStrength> {
     const score = this.calculatePasswordScore(password);
     const feedback = this.getPasswordFeedback(password);
-    
+
     return {
       score,
       strength: this.getStrengthLevel(score),
@@ -674,59 +686,61 @@ export class EncryptionService {
 
   private calculatePasswordScore(password: string): number {
     let score = 0;
-    
+
     // 长度得分
     if (password.length >= 8) score += 25;
     if (password.length >= 12) score += 15;
     if (password.length >= 16) score += 10;
-    
+
     // 复杂度得分
     if (/[a-z]/.test(password)) score += 10;
     if (/[A-Z]/.test(password)) score += 10;
     if (/[0-9]/.test(password)) score += 10;
     if (/[^a-zA-Z0-9]/.test(password)) score += 15;
-    
+
     // 唯一字符得分
     const uniqueChars = new Set(password).size;
     score += Math.min(uniqueChars * 2, 20);
-    
+
     return Math.min(score, 100);
   }
 
-  private getStrengthLevel(score: number): 'weak' | 'medium' | 'strong' | 'very-strong' {
-    if (score < 40) return 'weak';
-    if (score < 60) return 'medium';
-    if (score < 80) return 'strong';
-    return 'very-strong';
+  private getStrengthLevel(
+    score: number,
+  ): "weak" | "medium" | "strong" | "very-strong" {
+    if (score < 40) return "weak";
+    if (score < 60) return "medium";
+    if (score < 80) return "strong";
+    return "very-strong";
   }
 
   private getPasswordFeedback(password: string): string[] {
     const feedback: string[] = [];
-    
+
     if (password.length < 8) {
-      feedback.push('Password should be at least 8 characters long');
+      feedback.push("Password should be at least 8 characters long");
     }
-    
+
     if (!/[a-z]/.test(password)) {
-      feedback.push('Add lowercase letters');
+      feedback.push("Add lowercase letters");
     }
-    
+
     if (!/[A-Z]/.test(password)) {
-      feedback.push('Add uppercase letters');
+      feedback.push("Add uppercase letters");
     }
-    
+
     if (!/[0-9]/.test(password)) {
-      feedback.push('Add numbers');
+      feedback.push("Add numbers");
     }
-    
+
     if (!/[^a-zA-Z0-9]/.test(password)) {
-      feedback.push('Add special characters');
+      feedback.push("Add special characters");
     }
-    
+
     if (new Set(password).size < password.length * 0.7) {
-      feedback.push('Use more unique characters');
+      feedback.push("Use more unique characters");
     }
-    
+
     return feedback;
   }
 }
@@ -741,7 +755,7 @@ interface EncryptedData {
 
 interface PasswordStrength {
   score: number;
-  strength: 'weak' | 'medium' | 'strong' | 'very-strong';
+  strength: "weak" | "medium" | "strong" | "very-strong";
   feedback: string[];
 }
 ```
@@ -750,7 +764,7 @@ interface PasswordStrength {
 
 ```typescript
 // packages/frontend/src/services/cache.ts
-import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { openDB, DBSchema, IDBPDatabase } from "idb";
 
 interface CacheDB extends DBSchema {
   vaults: {
@@ -762,8 +776,8 @@ interface CacheDB extends DBSchema {
       size: number;
     };
     indexes: {
-      'by-timestamp': number;
-      'by-size': number;
+      "by-timestamp": number;
+      "by-size": number;
     };
   };
   metadata: {
@@ -786,13 +800,15 @@ export class CacheService {
   }
 
   private async initDB(): Promise<IDBPDatabase<CacheDB>> {
-    return openDB<CacheDB>('suipass-cache', 1, {
+    return openDB<CacheDB>("suipass-cache", 1, {
       upgrade(db) {
-        const vaultStore = db.createObjectStore('vaults', { keyPath: 'blobId' });
-        vaultStore.createIndex('by-timestamp', 'timestamp');
-        vaultStore.createIndex('by-size', 'size');
-        
-        db.createObjectStore('metadata', { keyPath: 'key' });
+        const vaultStore = db.createObjectStore("vaults", {
+          keyPath: "blobId",
+        });
+        vaultStore.createIndex("by-timestamp", "timestamp");
+        vaultStore.createIndex("by-size", "size");
+
+        db.createObjectStore("metadata", { keyPath: "key" });
       },
     });
   }
@@ -801,94 +817,102 @@ export class CacheService {
     const db = await this.db;
     const size = JSON.stringify(data).length;
     const timestamp = Date.now();
-    
+
     // 检查缓存大小限制
     await this.enforceCacheLimit();
-    
-    await db.put('vaults', {
+
+    await db.put("vaults", {
       blobId,
       data,
       timestamp,
       size,
     });
-    
+
     // 更新元数据
     await this.updateMetadata(size, 1);
   }
 
   async getVault(blobId: string): Promise<any | null> {
     const db = await this.db;
-    const cached = await db.get('vaults', blobId);
-    
+    const cached = await db.get("vaults", blobId);
+
     if (!cached) {
       return null;
     }
-    
+
     // 检查是否过期
     if (Date.now() - cached.timestamp > this.maxAge) {
-      await db.delete('vaults', blobId);
+      await db.delete("vaults", blobId);
       return null;
     }
-    
+
     return cached.data;
   }
 
   async clearCache(): Promise<void> {
     const db = await this.db;
-    await db.clear('vaults');
-    await db.clear('metadata');
+    await db.clear("vaults");
+    await db.clear("metadata");
   }
 
   async getCacheStats(): Promise<CacheStats> {
     const db = await this.db;
-    const vaults = await db.getAll('vaults');
-    const metadata = await db.get('metadata', 'stats');
-    
+    const vaults = await db.getAll("vaults");
+    const metadata = await db.get("metadata", "stats");
+
     return {
       totalSize: vaults.reduce((sum, v) => sum + v.size, 0),
       vaultCount: vaults.length,
       lastSync: metadata?.lastSync || 0,
-      oldestEntry: vaults.length > 0 ? Math.min(...vaults.map(v => v.timestamp)) : 0,
+      oldestEntry:
+        vaults.length > 0 ? Math.min(...vaults.map((v) => v.timestamp)) : 0,
     };
   }
 
   private async enforceCacheLimit(): Promise<void> {
     const db = await this.db;
     const stats = await this.getCacheStats();
-    
+
     if (stats.totalSize <= this.maxCacheSize) {
       return;
     }
-    
+
     // 删除最旧的条目直到满足大小限制
-    const vaults = await db.getAllFromIndex('vaults', 'by-timestamp');
+    const vaults = await db.getAllFromIndex("vaults", "by-timestamp");
     let currentSize = stats.totalSize;
-    
+
     for (const vault of vaults) {
-      if (currentSize <= this.maxCacheSize * 0.8) { // 清理到80%限制
+      if (currentSize <= this.maxCacheSize * 0.8) {
+        // 清理到80%限制
         break;
       }
-      
-      await db.delete('vaults', vault.blobId);
+
+      await db.delete("vaults", vault.blobId);
       currentSize -= vault.size;
     }
-    
+
     // 更新元数据
-    await this.updateMetadata(-stats.totalSize + currentSize, -stats.vaultCount + vaults.length);
+    await this.updateMetadata(
+      -stats.totalSize + currentSize,
+      -stats.vaultCount + vaults.length,
+    );
   }
 
-  private async updateMetadata(sizeDelta: number, countDelta: number): Promise<void> {
+  private async updateMetadata(
+    sizeDelta: number,
+    countDelta: number,
+  ): Promise<void> {
     const db = await this.db;
-    const metadata = await db.get('metadata', 'stats');
-    
+    const metadata = await db.get("metadata", "stats");
+
     const newMetadata = {
-      key: 'stats',
+      key: "stats",
       lastSync: Date.now(),
       totalSize: (metadata?.totalSize || 0) + sizeDelta,
       vaultCount: (metadata?.vaultCount || 0) + countDelta,
     };
-    
-    await db.put('metadata', newMetadata);
+
+    await db.put("metadata", newMetadata);
   }
 }
 
@@ -1118,7 +1142,7 @@ class BlobShardingService {
   private strategy: BlobSharding = {
     shardSize: 2 * 1024 * 1024, // 2MB
     maxParallelUploads: 4,
-    hashAlgorithm: 'SHA-256',
+    hashAlgorithm: "SHA-256",
     redundancy: {
       parityShards: 2,
       dataShards: 4,
@@ -1128,14 +1152,14 @@ class BlobShardingService {
   async splitBlob(data: Uint8Array): Promise<BlobShard[]> {
     const shards: BlobShard[] = [];
     const totalShards = Math.ceil(data.length / this.strategy.shardSize);
-    
+
     for (let i = 0; i < totalShards; i++) {
       const start = i * this.strategy.shardSize;
       const end = Math.min(start + this.strategy.shardSize, data.length);
       const shardData = data.slice(start, end);
-      
+
       const hash = await this.calculateHash(shardData);
-      
+
       shards.push({
         id: `${i}`,
         index: i,
@@ -1145,32 +1169,35 @@ class BlobShardingService {
         checksum: await this.generateChecksum(shardData),
       });
     }
-    
+
     return shards;
   }
 
   async mergeBlob(shards: BlobShard[]): Promise<Uint8Array> {
     // 按索引排序
     const sortedShards = shards.sort((a, b) => a.index - b.index);
-    
+
     // 计算总大小
     const totalSize = sortedShards.reduce((sum, shard) => sum + shard.size, 0);
     const result = new Uint8Array(totalSize);
-    
+
     // 合并数据
     let offset = 0;
     for (const shard of sortedShards) {
       result.set(shard.data, offset);
       offset += shard.size;
     }
-    
+
     return result;
   }
 
   private async calculateHash(data: Uint8Array): Promise<string> {
-    const hashBuffer = await crypto.subtle.digest(this.strategy.hashAlgorithm, data);
+    const hashBuffer = await crypto.subtle.digest(
+      this.strategy.hashAlgorithm,
+      data,
+    );
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
   }
 
   private async generateChecksum(data: Uint8Array): Promise<string> {
@@ -1189,47 +1216,47 @@ class BatchOperationService {
   async batchUpload(vaults: VaultBlob[]): Promise<string[]> {
     const results: string[] = [];
     const batches = this.createBatches(vaults);
-    
+
     // 并行处理批次
-    const batchPromises = batches.slice(0, this.maxConcurrentBatches).map(batch => 
-      this.processBatch(batch)
-    );
-    
+    const batchPromises = batches
+      .slice(0, this.maxConcurrentBatches)
+      .map((batch) => this.processBatch(batch));
+
     const batchResults = await Promise.all(batchPromises);
-    batchResults.forEach(result => results.push(...result));
-    
+    batchResults.forEach((result) => results.push(...result));
+
     return results;
   }
 
   private createBatches(vaults: VaultBlob[]): VaultBlob[][] {
     const batches: VaultBlob[][] = [];
-    
+
     for (let i = 0; i < vaults.length; i += this.maxBatchSize) {
       batches.push(vaults.slice(i, i + this.maxBatchSize));
     }
-    
+
     return batches;
   }
 
   private async processBatch(batch: VaultBlob[]): Promise<string[]> {
     const results: string[] = [];
-    
+
     for (const vault of batch) {
       try {
         const blobId = await this.uploadSingleVault(vault);
         results.push(blobId);
       } catch (error) {
-        console.error('Failed to upload vault:', error);
+        console.error("Failed to upload vault:", error);
         // 继续处理其他vault
       }
     }
-    
+
     return results;
   }
 
   private async uploadSingleVault(vault: VaultBlob): Promise<string> {
     // 实现单个vault上传逻辑
-    return 'blob_id';
+    return "blob_id";
   }
 }
 ```
@@ -1254,21 +1281,21 @@ class KeyManager {
     }
 
     if (!this.masterKey) {
-      throw new Error('Key manager not initialized');
+      throw new Error("Key manager not initialized");
     }
 
     const salt = new TextEncoder().encode(vaultId);
     const keyMaterial = await crypto.subtle.deriveKey(
       {
-        name: 'HKDF',
+        name: "HKDF",
         salt,
-        info: new TextEncoder().encode('vault-encryption'),
-        hash: 'SHA-256',
+        info: new TextEncoder().encode("vault-encryption"),
+        hash: "SHA-256",
       },
       this.masterKey,
-      { name: 'AES-GCM', length: 256 },
+      { name: "AES-GCM", length: 256 },
       false,
-      ['encrypt', 'decrypt']
+      ["encrypt", "decrypt"],
     );
 
     this.keyCache.set(vaultId, keyMaterial);
@@ -1284,26 +1311,26 @@ class KeyManager {
   private async deriveMasterKey(masterPassword: string): Promise<CryptoKey> {
     const encoder = new TextEncoder();
     const data = encoder.encode(masterPassword);
-    
+
     const key = await crypto.subtle.importKey(
-      'raw',
+      "raw",
       data,
-      { name: 'PBKDF2' },
+      { name: "PBKDF2" },
       false,
-      ['deriveBits', 'deriveKey']
+      ["deriveBits", "deriveKey"],
     );
 
     return crypto.subtle.deriveKey(
       {
-        name: 'PBKDF2',
+        name: "PBKDF2",
         salt: crypto.getRandomValues(new Uint8Array(32)),
         iterations: 100000,
-        hash: 'SHA-256',
+        hash: "SHA-256",
       },
       key,
-      { name: 'AES-GCM', length: 256 },
+      { name: "AES-GCM", length: 256 },
       false,
-      ['encrypt', 'decrypt']
+      ["encrypt", "decrypt"],
     );
   }
 }
@@ -1321,7 +1348,8 @@ class CostEstimator {
 
   estimateMonthlyCost(vaultSize: number): number {
     const compressedSize = vaultSize * this.compressionRatio;
-    const monthlyCost = compressedSize * this.costPerByteEpoch * this.epochsPerMonth;
+    const monthlyCost =
+      compressedSize * this.costPerByteEpoch * this.epochsPerMonth;
     return monthlyCost;
   }
 
@@ -1334,7 +1362,7 @@ class CostEstimator {
     const compressedSize = vaultSize * this.compressionRatio;
     const uploadCost = this.estimateUploadCost(vaultSize);
     const monthlyCost = this.estimateMonthlyCost(vaultSize);
-    
+
     return {
       originalSize: vaultSize,
       compressedSize,
@@ -1342,7 +1370,9 @@ class CostEstimator {
       uploadCost,
       monthlyCost,
       yearlyCost: monthlyCost * 12,
-      costSavings: vaultSize * this.costPerByteEpoch * this.epochsPerMonth * 12 - monthlyCost * 12,
+      costSavings:
+        vaultSize * this.costPerByteEpoch * this.epochsPerMonth * 12 -
+        monthlyCost * 12,
     };
   }
 }
@@ -1380,25 +1410,31 @@ class StorageMonitor {
 
     metrics.uploadCount++;
     metrics.totalSize += size;
-    metrics.averageUploadTime = (metrics.averageUploadTime * (metrics.uploadCount - 1) + duration) / metrics.uploadCount;
+    metrics.averageUploadTime =
+      (metrics.averageUploadTime * (metrics.uploadCount - 1) + duration) /
+      metrics.uploadCount;
     metrics.lastActivity = Date.now();
 
     this.metrics.set(blobId, metrics);
   }
 
   recordDownload(blobId: string, duration: number): void {
-    const metrics = this.metrics.get(blobId) || this.createDefaultMetrics(blobId);
-    
+    const metrics =
+      this.metrics.get(blobId) || this.createDefaultMetrics(blobId);
+
     metrics.downloadCount++;
-    metrics.averageDownloadTime = (metrics.averageDownloadTime * (metrics.downloadCount - 1) + duration) / metrics.downloadCount;
+    metrics.averageDownloadTime =
+      (metrics.averageDownloadTime * (metrics.downloadCount - 1) + duration) /
+      metrics.downloadCount;
     metrics.lastActivity = Date.now();
 
     this.metrics.set(blobId, metrics);
   }
 
   recordError(blobId: string, error: string): void {
-    const metrics = this.metrics.get(blobId) || this.createDefaultMetrics(blobId);
-    
+    const metrics =
+      this.metrics.get(blobId) || this.createDefaultMetrics(blobId);
+
     metrics.errorCount++;
     metrics.lastActivity = Date.now();
 
@@ -1415,10 +1451,17 @@ class StorageMonitor {
   getHealthStatus(): HealthStatus {
     const allMetrics = Array.from(this.metrics.values());
     const totalUploads = allMetrics.reduce((sum, m) => sum + m.uploadCount, 0);
-    const totalDownloads = allMetrics.reduce((sum, m) => sum + m.downloadCount, 0);
+    const totalDownloads = allMetrics.reduce(
+      (sum, m) => sum + m.downloadCount,
+      0,
+    );
     const totalErrors = allMetrics.reduce((sum, m) => sum + m.errorCount, 0);
-    const averageUploadTime = allMetrics.reduce((sum, m) => sum + m.averageUploadTime, 0) / allMetrics.length;
-    const averageDownloadTime = allMetrics.reduce((sum, m) => sum + m.averageDownloadTime, 0) / allMetrics.length;
+    const averageUploadTime =
+      allMetrics.reduce((sum, m) => sum + m.averageUploadTime, 0) /
+      allMetrics.length;
+    const averageDownloadTime =
+      allMetrics.reduce((sum, m) => sum + m.averageDownloadTime, 0) /
+      allMetrics.length;
 
     return {
       totalBlobs: allMetrics.length,
@@ -1428,7 +1471,7 @@ class StorageMonitor {
       errorRate: totalErrors / (totalUploads + totalDownloads) || 0,
       averageUploadTime,
       averageDownloadTime,
-      lastActivity: Math.max(...allMetrics.map(m => m.lastActivity)),
+      lastActivity: Math.max(...allMetrics.map((m) => m.lastActivity)),
     };
   }
 
@@ -1474,18 +1517,21 @@ interface HealthStatus {
 ### 演示场景设计
 
 #### 1. **核心功能演示**
+
 - 创建个人保险库
 - 上传加密密码数据
 - 实时权限分享
 - 版本回滚功能
 
 #### 2. **技术亮点展示**
+
 - Gas 优化效果对比
 - 安全评分系统
 - 审计日志追踪
 - Walrus 存储集成
 
 #### 3. **用户体验演示**
+
 - 简洁的界面操作
 - 实时状态更新
 - 权限管理流程
@@ -1532,36 +1578,39 @@ bar
 
 ### 黑客松开发计划
 
-| 阶段 | 时间 | 任务 | 交付物 |
-|------|------|------|--------|
-| Day 1 | 6小时 | 核心存储服务 | Walrus上传下载功能 |
-| Day 2 | 6小时 | 加密和缓存 | 数据加密、缓存机制 |
-| Day 3 | 6小时 | 智能合约集成 | 存储管理合约 |
-| Day 4 | 6小时 | 性能优化 | 分片、压缩、批量操作 |
-| Day 5 | 6小时 | 演示和测试 | 完整演示系统 |
+| 阶段  | 时间  | 任务         | 交付物               |
+| ----- | ----- | ------------ | -------------------- |
+| Day 1 | 6小时 | 核心存储服务 | Walrus上传下载功能   |
+| Day 2 | 6小时 | 加密和缓存   | 数据加密、缓存机制   |
+| Day 3 | 6小时 | 智能合约集成 | 存储管理合约         |
+| Day 4 | 6小时 | 性能优化     | 分片、压缩、批量操作 |
+| Day 5 | 6小时 | 演示和测试   | 完整演示系统         |
 
 ### 风险评估
 
-| 风险 | 概率 | 影响 | 缓解措施 |
-|------|------|------|----------|
-| Walrus集成问题 | 中 | 高 | 准备备用存储方案 |
-| Gas成本过高 | 低 | 中 | 优化数据结构 |
-| 前端集成延迟 | 中 | 中 | 使用简化UI |
-| 权限系统复杂 | 低 | 低 | 简化权限模型 |
+| 风险           | 概率 | 影响 | 缓解措施         |
+| -------------- | ---- | ---- | ---------------- |
+| Walrus集成问题 | 中   | 高   | 准备备用存储方案 |
+| Gas成本过高    | 低   | 中   | 优化数据结构     |
+| 前端集成延迟   | 中   | 中   | 使用简化UI       |
+| 权限系统复杂   | 低   | 低   | 简化权限模型     |
 
 ## 🔧 扩展建议
 
 ### 短期扩展 (1-2周)
+
 - **多因素认证**：集成 2FA 支持
 - **数据导入导出**：支持主流密码管理器格式
 - **浏览器扩展**：提供自动填充功能
 
 ### 中期扩展 (1-2月)
+
 - **团队协作**：支持多用户协作
 - **高级分享**：更灵活的分享策略
 - **API 集成**：提供第三方集成接口
 
 ### 长期扩展 (3-6月)
+
 - **企业功能**：企业级安全和管理功能
 - **移动端**：移动应用支持
 - **高级分析**：安全分析和报告功能

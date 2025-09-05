@@ -1,17 +1,153 @@
 {
   "root": true,
-  "env": { "browser": true, "es2020": true, "node": true },
+  "env": {
+    "browser": true,
+    "es2020": true,
+    "node": true
+  },
   "extends": [
-    "eslint:recommended"
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:jsx-a11y/recommended",
+    "plugin:security/recommended",
+    "plugin:import/recommended",
+    "plugin:import/typescript",
+    "plugin:unicorn/recommended"
   ],
-  "ignorePatterns": ["dist", ".eslintrc.json", "routeTree.gen.ts"],
+  "ignorePatterns": [
+    "dist",
+    ".eslintrc.json",
+    "routeTree.gen.ts",
+    "node_modules",
+    "*.config.js",
+    "*.config.ts"
+  ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": "latest",
-    "sourceType": "module"
+    "sourceType": "module",
+    "project": "./tsconfig.json",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "plugins": [
+    "@typescript-eslint",
+    "react",
+    "react-hooks",
+    "jsx-a11y",
+    "security",
+    "import",
+    "unicorn",
+    "sonarjs"
+  ],
+  "settings": {
+    "react": {
+      "version": "detect"
+    },
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true,
+        "project": "./tsconfig.json"
+      }
+    }
   },
   "rules": {
-    "no-unused-vars": "off",
-    "no-undef": "off"
-  }
+    // TypeScript 规则
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-non-null-assertion": "warn",
+    "@typescript-eslint/prefer-nullish-coalescing": "warn",
+    "@typescript-eslint/prefer-optional-chain": "warn",
+    "@typescript-eslint/no-floating-promises": "warn",
+
+    // React 规则
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
+    "react/jsx-uses-react": "off",
+    "react/jsx-key": "warn",
+    "react/jsx-no-bind": "warn",
+    "react/jsx-no-duplicate-props": "warn",
+    "react/no-unescaped-entities": "warn",
+    "react/no-array-index-key": "warn",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+
+    // 安全规则
+    "security/detect-object-injection": "warn",
+    "security/detect-non-literal-fs-filename": "warn",
+    "security/detect-non-literal-regexp": "warn",
+    "security/detect-unsafe-regex": "warn",
+    "security/detect-eval-with-expression": "warn",
+    "security/detect-no-csrf-before-method-override": "warn",
+    "security/detect-non-literal-require": "warn",
+
+    // 导入规则
+    "import/order": [
+      "warn",
+      {
+        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
+        "newlines-between": "always",
+        "alphabetize": { "order": "asc", "caseInsensitive": true }
+      }
+    ],
+    "import/no-unresolved": "warn",
+    "import/no-duplicates": "warn",
+    "import/no-cycle": "warn",
+    "import/no-useless-path-segments": "warn",
+
+    // Unicorn 规则 - 禁用过于严格的规则
+    "unicorn/filename-case": "off",
+    "unicorn/no-null": "warn",
+    "unicorn/prefer-node-protocol": "warn",
+    "unicorn/prefer-spread": "warn",
+    "unicorn/prefer-array-some": "off",
+    "unicorn/prefer-array-find": "off",
+    "unicorn/better-regex": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "unicorn/explicit-length-check": "off",
+    "unicorn/no-array-for-each": "off",
+    "unicorn/no-array-reduce": "off",
+    "unicorn/no-useless-undefined": "off",
+
+    // SonarJS 规则
+    "sonarjs/cognitive-complexity": ["warn", 25],
+    "sonarjs/no-duplicate-string": "off",
+    "sonarjs/no-identical-functions": "off",
+    "sonarjs/no-collapsible-if": "warn",
+    "sonarjs/prefer-immediate-return": "warn",
+
+    // 通用规则
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "no-debugger": "warn",
+    "no-alert": "warn",
+    "no-var": "warn",
+    "prefer-const": "warn",
+    "prefer-arrow-callback": "warn",
+    "prefer-template": "warn",
+    "object-shorthand": "warn",
+    "consistent-return": "warn",
+    "eqeqeq": ["warn", "always"],
+    "curly": "warn"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
+      "env": {
+        "jest": true
+      },
+      "rules": {
+        "security/detect-non-literal-fs-filename": "off",
+        "sonarjs/no-duplicate-string": "off"
+      }
+    },
+    {
+      "files": ["**/*.config.{js,ts}"],
+      "rules": {
+        "import/no-default-export": "off"
+      }
+    }
+  ]
 }

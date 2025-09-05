@@ -114,7 +114,8 @@ export class AuditService {
     // 计算各类型操作统计
     filteredLogs.forEach(log => {
       stats.actionsByType[log.action] = (stats.actionsByType[log.action] || 0) + 1;
-      stats.actionsByResource[log.resourceType] = (stats.actionsByResource[log.resourceType] || 0) + 1;
+      stats.actionsByResource[log.resourceType] =
+        (stats.actionsByResource[log.resourceType] || 0) + 1;
       stats.usersActivity[log.userId] = (stats.usersActivity[log.userId] || 0) + 1;
     });
 
@@ -123,11 +124,12 @@ export class AuditService {
 
     // 计算平均响应时间
     const responseTimes = filteredLogs
-      .filter(log => log.metadata.duration)
-      .map(log => log.metadata.duration);
-    stats.averageResponseTime = responseTimes.length > 0 
-      ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length 
-      : 0;
+      .filter(log => log.metadata['duration'])
+      .map(log => log.metadata['duration']);
+    stats.averageResponseTime =
+      responseTimes.length > 0
+        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+        : 0;
 
     return stats;
   }
@@ -138,11 +140,10 @@ export class AuditService {
   async getSecurityScore(userId?: string): Promise<SecurityScore> {
     const targetUserId = userId || getCurrentUserId();
     const userLogs = await this.getUserLogs(targetUserId);
-    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
     const recentLogs = userLogs.filter(log => log.timestamp >= thirtyDaysAgo);
 
-    const score = this.calculateSecurityScore(recentLogs);
-    return score;
+    return this.calculateSecurityScore(recentLogs);
   }
 
   /**
@@ -161,13 +162,13 @@ export class AuditService {
         severity: 'medium',
         description: '检测到来自多个IP地址的活动',
         timestamp: Date.now(),
-        details: { locations: Array.from(locations) },
+        details: { locations: [...locations] },
       });
     }
 
     // 检测高频失败操作
-    const recentFailures = userLogs.filter(log => 
-      !log.result && log.timestamp > Date.now() - (60 * 60 * 1000)
+    const recentFailures = userLogs.filter(
+      log => !log.result && log.timestamp > Date.now() - 60 * 60 * 1000
     );
     if (recentFailures.length > 10) {
       activities.push({
@@ -281,15 +282,15 @@ export class AuditService {
     }
 
     // 基于失败操作扣分
-    score = Math.max(0, score - (failedActions * 2));
+    score = Math.max(0, score - failedActions * 2);
 
     // 基于操作类型调整
-    const sensitiveActions = logs.filter(log => 
+    const sensitiveActions = logs.filter(log =>
       ['delete_vault', 'share_vault', 'revoke_access'].includes(log.action)
     );
     if (sensitiveActions.length > 0) {
       const sensitiveFailures = sensitiveActions.filter(log => !log.result).length;
-      score = Math.max(0, score - (sensitiveFailures * 5));
+      score = Math.max(0, score - sensitiveFailures * 5);
     }
 
     return {
@@ -303,16 +304,30 @@ export class AuditService {
   }
 
   private getSecurityLevel(score: number): 'excellent' | 'good' | 'fair' | 'poor' {
-    if (score >= 90) return 'excellent';
-    if (score >= 75) return 'good';
-    if (score >= 60) return 'fair';
+    if (score >= 90) {
+      return 'excellent';
+    }
+    if (score >= 75) {
+      return 'good';
+    }
+    if (score >= 60) {
+      return 'fair';
+    }
     return 'poor';
   }
 
   private convertToCSV(logs: AuditLog[]): string {
     const headers = [
-      'ID', 'User ID', 'Action', 'Resource ID', 'Resource Type', 
-      'Result', 'Error Message', 'Timestamp', 'IP Address', 'User Agent'
+      'ID',
+      'User ID',
+      'Action',
+      'Resource ID',
+      'Resource Type',
+      'Result',
+      'Error Message',
+      'Timestamp',
+      'IP Address',
+      'User Agent',
     ];
 
     const rows = logs.map(log => [
@@ -344,7 +359,7 @@ async function getClientIP(): Promise<string> {
     // 例如：const response = await fetch('https://api.ipify.org?format=json');
     // return response.json().ip;
     return '127.0.0.1';
-  } catch (error) {
+  } catch {
     return 'unknown';
   }
 }

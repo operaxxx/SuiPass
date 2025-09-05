@@ -32,16 +32,18 @@
 ### 1. 加密实现方案
 
 **采用现有实现方案**：
+
 - **加密算法**：`AES-256-GCM`
 - **密钥派生**：`Argon2id` (使用 `argon2-browser`)
 - **API**：Web Crypto API
 - **优化**：添加 Web Workers 支持提升性能
 
 **配置参数**：
+
 ```typescript
 const ENCRYPTION_CONFIG = {
-  algorithm: 'AES-256-GCM',
-  keyDerivation: 'Argon2id',
+  algorithm: "AES-256-GCM",
+  keyDerivation: "Argon2id",
   keyLength: 256, // bits
   ivLength: 12, // bytes
   tagLength: 16, // bytes
@@ -55,12 +57,14 @@ const ENCRYPTION_CONFIG = {
 ### 2. 状态管理架构
 
 **统一使用 Zustand**：
+
 - **主状态管理**：Zustand + persist 中间件
 - **服务器状态**：TanStack Query
 - **本地状态**：React useState
 - **移除**：Redux Toolkit（避免复杂化）
 
 **Store 结构**：
+
 ```typescript
 // 核心状态
 ├── auth.ts          // 认证状态
@@ -78,27 +82,27 @@ const ENCRYPTION_CONFIG = {
 
 **调整为 8 周**：
 
-| 阶段 | 时间 | 主要任务 | 交付物 |
-|------|------|----------|--------|
-| **Week 1-2** | 架构搭建 | 项目初始化、基础架构、核心服务 | 项目框架、基础服务 |
-| **Week 3-4** | 核心功能 | 加密服务、存储服务、缓存机制 | 完整的数据存储层 |
-| **Week 5-6** | 区块链集成 | 智能合约集成、Walrus存储、权限管理 | 完整的区块链功能 |
-| **Week 7-8** | 完善测试 | UI完善、E2E测试、性能优化、文档 | 可演示的完整系统 |
+| 阶段         | 时间       | 主要任务                           | 交付物             |
+| ------------ | ---------- | ---------------------------------- | ------------------ |
+| **Week 1-2** | 架构搭建   | 项目初始化、基础架构、核心服务     | 项目框架、基础服务 |
+| **Week 3-4** | 核心功能   | 加密服务、存储服务、缓存机制       | 完整的数据存储层   |
+| **Week 5-6** | 区块链集成 | 智能合约集成、Walrus存储、权限管理 | 完整的区块链功能   |
+| **Week 7-8** | 完善测试   | UI完善、E2E测试、性能优化、文档    | 可演示的完整系统   |
 
 ### 4. 统一技术栈
 
 **最终技术栈选择**：
 
-| 层面 | 技术选型 | 理由 |
-|------|----------|------|
-| **前端框架** | React 18 + TypeScript | 类型安全，生态完善 |
-| **构建工具** | Vite | 快速构建，开发体验好 |
-| **状态管理** | Zustand + TanStack Query | 轻量级，性能优秀 |
-| **样式方案** | Tailwind CSS | 快速开发，一致性 |
-| **加密库** | Web Crypto API + argon2-browser | 原生支持，安全性高 |
-| **区块链** | Sui + @mysten/sui.js | 官方支持，功能完整 |
-| **存储** | Walrus + IndexedDB | 去中心化，离线支持 |
-| **测试** | Vitest + Playwright | 快速测试，E2E覆盖 |
+| 层面         | 技术选型                        | 理由                 |
+| ------------ | ------------------------------- | -------------------- |
+| **前端框架** | React 18 + TypeScript           | 类型安全，生态完善   |
+| **构建工具** | Vite                            | 快速构建，开发体验好 |
+| **状态管理** | Zustand + TanStack Query        | 轻量级，性能优秀     |
+| **样式方案** | Tailwind CSS                    | 快速开发，一致性     |
+| **加密库**   | Web Crypto API + argon2-browser | 原生支持，安全性高   |
+| **区块链**   | Sui + @mysten/sui.js            | 官方支持，功能完整   |
+| **存储**     | Walrus + IndexedDB              | 去中心化，离线支持   |
+| **测试**     | Vitest + Playwright             | 快速测试，E2E覆盖    |
 
 ## 🏗️ 架构设计
 
@@ -158,7 +162,7 @@ sequenceDiagram
     participant E as 加密服务
     participant W as Web Workers
     participant S as 存储
-    
+
     U->>F: 输入数据
     F->>W: 发送加密任务
     W->>E: 执行加密

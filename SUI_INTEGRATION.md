@@ -19,12 +19,14 @@ SuiPass 现已完全集成真实的 Sui 区块链网络，支持以下功能：
 ### 1. 服务层 (Services)
 
 #### SuiService (`/packages/frontend/src/services/sui.ts`)
+
 - 真实的 Sui 客户端连接
 - 钱包适配器集成
 - 智能合约交互
 - 重试机制和错误处理
 
 **主要功能：**
+
 - `connectWallet()` - 连接钱包
 - `createVaultObject()` - 创建保险库对象
 - `getVault()` - 获取保险库信息
@@ -35,12 +37,14 @@ SuiPass 现已完全集成真实的 Sui 区块链网络，支持以下功能：
 ### 2. 状态管理 (State Management)
 
 #### AuthStore (`/packages/frontend/src/stores/auth.ts`)
+
 - 钱包连接状态
 - 用户地址和余额
 - 网络状态管理
 - 持久化存储
 
 **状态字段：**
+
 ```typescript
 {
   wallet: WalletAdapter | null;
@@ -48,24 +52,27 @@ SuiPass 现已完全集成真实的 Sui 区块链网络，支持以下功能：
   address: string | null;
   balance: number;
   network: string;
-  networkStatus: 'online' | 'offline';
+  networkStatus: "online" | "offline";
 }
 ```
 
 ### 3. UI 组件
 
 #### WalletConnect (`/packages/frontend/src/components/wallet/wallet-connect.tsx`)
+
 - 钱包连接按钮
 - 地址显示和复制
 - 余额显示
 - 断开连接功能
 
 #### NetworkStatus (`/packages/frontend/src/components/wallet/network-status.tsx`)
+
 - 网络状态指示器
 - 网络类型显示
 - 在线/离线状态
 
 #### AppHeader (`/packages/frontend/src/components/app/app-header.tsx`)
+
 - 应用导航栏
 - 集成钱包连接
 - 网络状态显示
@@ -73,11 +80,13 @@ SuiPass 现已完全集成真实的 Sui 区块链网络，支持以下功能：
 ### 4. 配置管理
 
 #### 网络配置 (`/packages/frontend/src/config/network.ts`)
+
 - 多网络配置
 - RPC 端点管理
 - 功能开关控制
 
 **支持的网络：**
+
 - **devnet** - 开发网络（带水龙头）
 - **testnet** - 测试网络（带水龙头）
 - **mainnet** - 主网络
@@ -160,7 +169,7 @@ import { WalletConnect } from '../components/wallet/wallet-connect';
 // 在组件中使用
 function MyComponent() {
   const { isConnected, address } = useAuthStore();
-  
+
   return (
     <div>
       <WalletConnect />
@@ -173,21 +182,21 @@ function MyComponent() {
 ### 2. 创建保险库
 
 ```typescript
-import { suiService } from '../services/sui';
+import { suiService } from "../services/sui";
 
 async function createVault() {
   try {
     const vault = {
-      name: 'My Vault',
-      description: 'Personal passwords',
-      storageBlobId: 'walrus_blob_id_here',
+      name: "My Vault",
+      description: "Personal passwords",
+      storageBlobId: "walrus_blob_id_here",
       // ... 其他字段
     };
-    
+
     const vaultId = await suiService.createVaultObject(vault);
-    console.log('Vault created:', vaultId);
+    console.log("Vault created:", vaultId);
   } catch (error) {
-    console.error('Failed to create vault:', error);
+    console.error("Failed to create vault:", error);
   }
 }
 ```
@@ -197,10 +206,10 @@ async function createVault() {
 ```typescript
 async function shareVault(vaultId: string, recipient: string) {
   try {
-    await suiService.shareVault(vaultId, recipient, 'view');
-    console.log('Vault shared successfully');
+    await suiService.shareVault(vaultId, recipient, "view");
+    console.log("Vault shared successfully");
   } catch (error) {
-    console.error('Failed to share vault:', error);
+    console.error("Failed to share vault:", error);
   }
 }
 ```
@@ -292,25 +301,28 @@ pnpm build
 
 ### 网络支持
 
-| 钱包 | Devnet | Testnet | Mainnet | Localnet |
-|------|--------|---------|---------|----------|
-| Sui Wallet | ✅ | ✅ | ✅ | ✅ |
-| Suiet | ✅ | ✅ | ✅ | ✅ |
-| Ethos | ✅ | ✅ | ✅ | ❌ |
+| 钱包       | Devnet | Testnet | Mainnet | Localnet |
+| ---------- | ------ | ------- | ------- | -------- |
+| Sui Wallet | ✅     | ✅      | ✅      | ✅       |
+| Suiet      | ✅     | ✅      | ✅      | ✅       |
+| Ethos      | ✅     | ✅      | ✅      | ❌       |
 
 ## 安全考虑
 
 ### 1. 密钥管理
+
 - 私钥永远不会离开钱包
 - 所有签名都在钱包中完成
 - 应用程序无法访问私钥
 
 ### 2. 网络安全
+
 - 所有通信都通过 HTTPS
 - RPC 端点验证
 - 防止中间人攻击
 
 ### 3. 交易安全
+
 - Gas 限制设置
 - 交易模拟和验证
 - 错误回滚机制
@@ -318,16 +330,19 @@ pnpm build
 ## 性能优化
 
 ### 1. 缓存策略
+
 - 包 ID 缓存
 - 网络状态缓存
 - 对象查询缓存
 
 ### 2. 批量操作
+
 - 多笔交易批处理
 - 并行查询优化
 - 延迟加载
 
 ### 3. 网络优化
+
 - 连接池管理
 - 请求去重
 - 智能重试
@@ -358,7 +373,7 @@ pnpm build
 window.__SUI_DEBUG__ = true;
 
 // 查看服务状态
-console.log(window.__container?.get('SUI_SERVICE'));
+console.log(window.__container?.get("SUI_SERVICE"));
 
 // 查看网络状态
 console.log(suiService.getNetworkStatus());
