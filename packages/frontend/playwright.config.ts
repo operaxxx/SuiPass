@@ -11,13 +11,13 @@ export default defineConfig({
   fullyParallel: true,
 
   // 禁止在失败时截屏（可选）
-  forbidOnly: !!process.env.CI,
+  forbidOnly: !!process.env?.CI,
 
   // CI失败时重试次数
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env?.CI ? 2 : 0,
 
   // 工作进程数量
-  workers: process.env.CI ? 2 : 4,
+  workers: process.env?.CI ? 2 : 4,
 
   // 测试报告配置
   reporter: [
@@ -26,36 +26,6 @@ export default defineConfig({
     ['junit', { outputFile: 'test-results.xml' }],
     ['list'],
   ],
-
-  // 全局测试设置
-  use: {
-    // 基础URL
-    baseURL: 'http://localhost:3000',
-
-    // 浏览器配置
-    viewport: { width: 1280, height: 720 },
-    video: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    trace: 'on-first-retry',
-
-    // 超时配置
-    actionTimeout: 10000,
-    navigationTimeout: 30000,
-
-    // 头部信息
-    extraHTTPHeaders: {
-      'Accept-Language': 'en-US,en;q=0.9',
-    },
-
-    // 权限
-    permissions: ['geolocation', 'notifications'],
-
-    // 忽略HTTPS错误
-    ignoreHTTPSErrors: true,
-
-    // 用户代理
-    userAgent: 'SuiPass-E2E-Test/1.0.0',
-  },
 
   // 项目配置
   projects: [
@@ -92,12 +62,9 @@ export default defineConfig({
   webServer: {
     command: 'pnpm dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !process.env?.CI,
     timeout: 120000,
   },
-
-  // 依赖项
-  dependencies: ['package.json', 'pnpm-lock.yaml'],
 
   // 测试文件匹配
   testMatch: '**/*.e2e.{ts,tsx,js,jsx}',
@@ -109,11 +76,34 @@ export default defineConfig({
   globalSetup: './src/e2e/global-setup.ts',
   globalTeardown: './src/e2e/global-teardown.ts',
 
-  // 环境变量
-  env: {
-    NODE_ENV: 'test',
-    VITE_SUI_NETWORK: 'testnet',
-    VITE_ENABLE_LOCAL_MODE: 'true',
+  // 全局测试设置
+  use: {
+    // 基础URL
+    baseURL: 'http://localhost:3000',
+
+    // 浏览器配置
+    viewport: { width: 1280, height: 720 },
+    video: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    trace: 'on-first-retry',
+
+    // 超时配置
+    actionTimeout: 10000,
+    navigationTimeout: 30000,
+
+    // 头部信息
+    extraHTTPHeaders: {
+      'Accept-Language': 'en-US,en;q=0.9',
+    },
+
+    // 权限
+    permissions: ['geolocation', 'notifications'],
+
+    // 忽略HTTPS错误
+    ignoreHTTPSErrors: true,
+
+    // 用户代理
+    userAgent: 'SuiPass-E2E-Test/1.0.0',
   },
 
   // 测试超时
@@ -123,12 +113,4 @@ export default defineConfig({
   expect: {
     timeout: 10000,
   },
-
-  // 网络请求模拟
-  route: [
-    {
-      url: '**/api/**',
-      method: method => ['GET', 'POST', 'PUT', 'DELETE'].includes(method),
-    },
-  ],
 });

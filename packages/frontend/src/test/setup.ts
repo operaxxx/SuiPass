@@ -1,8 +1,8 @@
 // Vitest 测试设置
 // packages/frontend/src/test/setup.ts
 
-import { vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import { vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 
 // 全局测试设置
@@ -29,8 +29,8 @@ beforeEach(() => {
   Object.defineProperty(window, 'crypto', {
     value: {
       getRandomValues: vi.fn((array: Uint8Array) => {
-        for (let i = 0; i < array.length; i++) {
-          array[i] = Math.floor(Math.random() * 256);
+        for (let index = 0; index < array.length; index++) {
+          array[index] = Math.floor(Math.random() * 256);
         }
         return array;
       }),
@@ -115,32 +115,26 @@ beforeEach(() => {
   }));
 
   // 模拟 scrollTo
-  Element.prototype.scrollTo = vi.fn();
-  window.scrollTo = vi.fn();
+  Element.prototype.scrollTo = vi.fn((x?: number | ScrollToOptions, y?: number) => {});
+  window.scrollTo = vi.fn((x?: number | ScrollToOptions, y?: number) => {});
 
   // 模拟 requestAnimationFrame
-  global.requestAnimationFrame = vi.fn(callback => {
-    return setTimeout(callback, 0);
+  global.requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
+    return setTimeout(() => callback(performance.now()), 0) as unknown as number;
   });
 
   // 模拟 cancelAnimationFrame
-  global.cancelAnimationFrame = vi.fn(id => {
+  global.cancelAnimationFrame = vi.fn((id: number) => {
     clearTimeout(id);
   });
 
   // 模拟 setTimeout 和 clearTimeout
-  global.setTimeout = vi.fn(callback => {
-    return setTimeout(callback, 0);
-  });
-
-  global.clearTimeout = vi.fn(clearTimeout);
+  (global as any).setTimeout = vi.fn();
+  (global as any).clearTimeout = vi.fn();
 
   // 模拟 setInterval 和 clearInterval
-  global.setInterval = vi.fn(callback => {
-    return setInterval(callback, 0);
-  });
-
-  global.clearInterval = vi.fn(clearInterval);
+  (global as any).setInterval = vi.fn();
+  (global as any).clearInterval = vi.fn();
 
   // 模拟 console 方法（减少噪音）
   global.console = {
@@ -173,59 +167,54 @@ afterEach(() => {
 });
 
 // 全局测试工具
-global.describe = describe;
-global.it = it;
-global.test = test;
-global.expect = expect;
-global.vi = vi;
+// 设置全局测试变量
+(global as any).describe = describe;
+(global as any).it = it;
+(global as any).test = test;
+(global as any).expect = expect;
+(global as any).vi = vi;
 
 // 添加自定义匹配器
 expect.extend({
   toBeWithinRange(received: number, floor: number, ceiling: number) {
     const pass = received >= floor && received <= ceiling;
-    if (pass) {
-      return {
-        message: () => `expected ${received} not to be within range ${floor} - ${ceiling}`,
-        pass: true,
-      };
-    } else {
-      return {
-        message: () => `expected ${received} to be within range ${floor} - ${ceiling}`,
-        pass: false,
-      };
-    }
+    return pass
+      ? {
+          message: () => `expected ${received} not to be within range ${floor} - ${ceiling}`,
+          pass: true,
+        }
+      : {
+          message: () => `expected ${received} to be within range ${floor} - ${ceiling}`,
+          pass: false,
+        };
   },
 
   toBeValidEmail(received: string) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const pass = emailRegex.test(received);
-    if (pass) {
-      return {
-        message: () => `expected ${received} not to be a valid email`,
-        pass: true,
-      };
-    } else {
-      return {
-        message: () => `expected ${received} to be a valid email`,
-        pass: false,
-      };
-    }
+    return pass
+      ? {
+          message: () => `expected ${received} not to be a valid email`,
+          pass: true,
+        }
+      : {
+          message: () => `expected ${received} to be a valid email`,
+          pass: false,
+        };
   },
 
   toBeValidUUID(received: string) {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     const pass = uuidRegex.test(received);
-    if (pass) {
-      return {
-        message: () => `expected ${received} not to be a valid UUID`,
-        pass: true,
-      };
-    } else {
-      return {
-        message: () => `expected ${received} to be a valid UUID`,
-        pass: false,
-      };
-    }
+    return pass
+      ? {
+          message: () => `expected ${received} not to be a valid UUID`,
+          pass: true,
+        }
+      : {
+          message: () => `expected ${received} to be a valid UUID`,
+          pass: false,
+        };
   },
 });
 
@@ -240,7 +229,6 @@ declare module 'vitest' {
 
 // 导出测试工具
 export * from '@testing-library/react';
-export * from '@testing-library/jest-dom';
 export * from 'vitest';
 
 // 测试辅助函数
@@ -343,6 +331,8 @@ export const createMockResponse = <T = any>(data: T, status = 200, statusText = 
     text: vi.fn().mockResolvedValue(JSON.stringify(data)),
     blob: vi.fn().mockResolvedValue(new Blob()),
     arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(0)),
+    bytes: vi.fn().mockResolvedValue(new Uint8Array()),
+    formData: vi.fn().mockResolvedValue(new FormData()),
     headers: new Headers(),
     redirected: false,
     type: 'basic',
@@ -350,7 +340,7 @@ export const createMockResponse = <T = any>(data: T, status = 200, statusText = 
     clone: vi.fn(),
     body: null,
     bodyUsed: false,
-  };
+  } as Response;
 };
 
 // 模拟 API 错误
