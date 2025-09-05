@@ -54,14 +54,14 @@ export class CacheService {
 
   private async initDB(): Promise<IDBPDatabase<CacheDB>> {
     return openDB<CacheDB>('suipass-cache', 1, {
-      upgrade(db) {
-        const vaultStore = db.createObjectStore('vaults', { keyPath: 'blobId' });
+      upgrade(database) {
+        const vaultStore = database.createObjectStore('vaults', { keyPath: 'blobId' });
         vaultStore.createIndex('by-timestamp', 'timestamp');
         vaultStore.createIndex('by-size', 'size');
         vaultStore.createIndex('by-access-count', 'accessCount');
 
-        db.createObjectStore('metadata', { keyPath: 'key' });
-        db.createObjectStore('sessions', { keyPath: 'key' });
+        database.createObjectStore('metadata', { keyPath: 'key' });
+        database.createObjectStore('sessions', { keyPath: 'key' });
       },
     });
   }
@@ -70,7 +70,7 @@ export class CacheService {
    * 存储保险库数据
    */
   async setVault(blobId: string, data: any): Promise<void> {
-    const db = await this.db;
+    const database = await this.db;
     const size = JSON.stringify(data).length;
     const timestamp = Date.now();
 
@@ -78,7 +78,7 @@ export class CacheService {
     await this.enforceCacheLimit();
 
     // 检查是否已存在
-    const existing = await db.get('vaults', blobId);
+    const existing = await database.get('vaults', blobId);
 
     const vaultData = {
       blobId,
@@ -89,7 +89,7 @@ export class CacheService {
       lastAccessed: timestamp,
     };
 
-    await db.put('vaults', vaultData);
+    await database.put('vaults', vaultData);
 
     // 更新元数据
     await this.updateMetadata(size, existing ? 0 : 1, 0, 0);
@@ -99,8 +99,8 @@ export class CacheService {
    * 获取保险库数据
    */
   async getVault(blobId: string): Promise<any | null> {
-    const db = await this.db;
-    const cached = await db.get('vaults', blobId);
+    const database = await this.db;
+    const cached = await database.get('vaults', blobId);
 
     if (!cached) {
       await this.updateMetadata(0, 0, 0, 1); // 记录未命中
@@ -109,7 +109,7 @@ export class CacheService {
 
     // 检查是否过期
     if (Date.now() - cached.timestamp > this.maxAge) {
-      await db.delete('vaults', blobId);
+      await database.delete('vaults', blobId);
       await this.updateMetadata(-cached.size, -1, 0, 1);
       return null;
     }
@@ -117,7 +117,7 @@ export class CacheService {
     // 更新访问信息
     cached.accessCount += 1;
     cached.lastAccessed = Date.now();
-    await db.put('vaults', cached);
+    await database.put('vaults', cached);
 
     // 更新元数据
     await this.updateMetadata(0, 0, 1, 0); // 记录命中
@@ -129,11 +129,11 @@ export class CacheService {
    * 删除保险库数据
    */
   async deleteVault(blobId: string): Promise<void> {
-    const db = await this.db;
-    const cached = await db.get('vaults', blobId);
+    const database = await this.db;
+    const cached = await database.get('vaults', blobId);
 
     if (cached) {
-      await db.delete('vaults', blobId);
+      await database.delete('vaults', blobId);
       await this.updateMetadata(-cached.size, -1, 0, 0);
     }
   }
@@ -142,19 +142,19 @@ export class CacheService {
    * 清空所有缓存
    */
   async clearCache(): Promise<void> {
-    const db = await this.db;
-    await db.clear('vaults');
-    await db.clear('metadata');
-    await db.clear('sessions');
+    const database = await this.db;
+    await database.clear('vaults');
+    await database.clear('metadata');
+    await database.clear('sessions');
   }
 
   /**
    * 获取缓存统计信息
    */
   async getCacheStats(): Promise<CacheStats> {
-    const db = await this.db;
-    const vaults = await db.getAll('vaults');
-    const metadata = await db.get('metadata', 'stats');
+    const database = await this.db;
+    const vaults = await database.getAll('vaults');
+    const metadata = await database.get('metadata', 'stats');
 
     const totalSize = vaults.reduce((sum, v) => sum + v.size, 0);
     const totalAccessCount = vaults.reduce((sum, v) => sum + v.accessCount, 0);
@@ -177,14 +177,14 @@ export class CacheService {
    * 清理过期缓存
    */
   async cleanExpiredCache(): Promise<number> {
-    const db = await this.db;
-    const vaults = await db.getAll('vaults');
+    const database = await this.db;
+    const vaults = await database.getAll('vaults');
     const now = Date.now();
     let cleanedCount = 0;
 
     for (const vault of vaults) {
       if (now - vault.timestamp > this.maxAge) {
-        await db.delete('vaults', vault.blobId);
+        await database.delete('vaults', vault.blobId);
         await this.updateMetadata(-vault.size, -1, 0, 0);
         cleanedCount++;
       }
@@ -214,7 +214,7 @@ export class CacheService {
    * 按大小清理缓存
    */
   private async cleanBySize(): Promise<void> {
-    const db = await this.db;
+    const database = await this.db;
     const stats = await this.getCacheStats();
 
     if (stats.totalSize <= this.maxCacheSize) {
@@ -222,7 +222,7 @@ export class CacheService {
     }
 
     // 删除最旧的条目直到满足大小限制
-    const vaults = await db.getAllFromIndex('vaults', 'by-timestamp');
+    const vaults = await database.getAllFromIndex('vaults', 'by-timestamp');
     let currentSize = stats.totalSize;
 
     for (const vault of vaults) {
@@ -231,14 +231,14 @@ export class CacheService {
         break;
       }
 
-      await db.delete('vaults', vault.blobId);
+      await database.delete('vaults', vault.blobId);
       currentSize -= vault.size;
     }
 
     // 更新元数据
     await this.updateMetadata(
       stats.totalSize - currentSize,
-      -(vaults.length - (await db.getAll('vaults')).length),
+      -(vaults.length - (await database.getAll('vaults')).length),
       0,
       0
     );
@@ -248,8 +248,8 @@ export class CacheService {
    * 按数量清理缓存
    */
   private async cleanByCount(): Promise<void> {
-    const db = await this.db;
-    const vaults = await db.getAllFromIndex('vaults', 'by-timestamp');
+    const database = await this.db;
+    const vaults = await database.getAllFromIndex('vaults', 'by-timestamp');
     const currentCount = vaults.length;
 
     if (currentCount <= this.maxVaults) {
@@ -258,8 +258,10 @@ export class CacheService {
 
     // 删除最旧的条目直到满足数量限制
     const toDelete = currentCount - this.maxVaults;
-    for (let i = 0; i < toDelete; i++) {
-      await db.delete('vaults', vaults[i].blobId);
+    for (let index = 0; index < toDelete; index++) {
+      if (vaults[index]?.blobId !== undefined) {
+        await database.delete('vaults', vaults[index]!.blobId);
+      }
     }
 
     // 更新元数据
@@ -276,8 +278,8 @@ export class CacheService {
     hitDelta: number,
     missDelta: number
   ): Promise<void> {
-    const db = await this.db;
-    const metadata = await db.get('metadata', 'stats');
+    const database = await this.db;
+    const metadata = await database.get('metadata', 'stats');
 
     const newMetadata = {
       key: 'stats',
@@ -288,23 +290,23 @@ export class CacheService {
       missCount: (metadata?.missCount || 0) + missDelta,
     };
 
-    await db.put('metadata', newMetadata);
+    await database.put('metadata', newMetadata);
   }
 
   /**
    * 会话管理
    */
-  async setSession(key: string, session: SessionData): Promise<void> {
-    const db = await this.db;
-    await db.put('sessions', {
+  async setSession(key: string, session: Omit<SessionData, 'key'>): Promise<void> {
+    const database = await this.db;
+    await database.put('sessions', {
       ...session,
       key,
-    });
+    } as SessionData);
   }
 
   async getSession(key: string): Promise<SessionData | null> {
-    const db = await this.db;
-    const session = await db.get('sessions', key);
+    const database = await this.db;
+    const session = await database.get('sessions', key);
 
     if (!session) {
       return null;
@@ -312,16 +314,16 @@ export class CacheService {
 
     // 检查是否过期
     if (Date.now() > session.expiresAt) {
-      await db.delete('sessions', key);
+      await database.delete('sessions', key);
       return null;
     }
 
-    return session;
+    return session as SessionData;
   }
 
   async deleteSession(key: string): Promise<void> {
-    const db = await this.db;
-    await db.delete('sessions', key);
+    const database = await this.db;
+    await database.delete('sessions', key);
   }
 
   /**
@@ -337,8 +339,8 @@ export class CacheService {
    * 获取最常访问的保险库
    */
   async getMostAccessedVaults(limit: number = 10): Promise<string[]> {
-    const db = await this.db;
-    const vaults = await db.getAllFromIndex('vaults', 'by-access-count');
+    const database = await this.db;
+    const vaults = await database.getAllFromIndex('vaults', 'by-access-count');
 
     return vaults
       .sort((a, b) => b.accessCount - a.accessCount)

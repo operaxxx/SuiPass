@@ -2,10 +2,12 @@
 // packages/frontend/src/services/walrus.ts
 
 import { WalrusClient } from '@mysten/walrus';
-import { EncryptionService } from './encryption';
-import { CacheService } from './cache';
+
 import { AuditService } from './audit';
-import type { VaultBlob, DeltaUpdate } from '@/types/walrus';
+import { CacheService } from './cache';
+import { EncryptionService } from './encryption';
+
+import type { VaultBlob, DeltaUpdate, EncryptedData } from '@/types/walrus';
 
 export class WalrusStorageService {
   private client: WalrusClient;
@@ -13,12 +15,14 @@ export class WalrusStorageService {
   private cache: CacheService;
   private audit: AuditService;
   private retryAttempts = 3;
-  private maxBlobSize = 10 * 1024 * 1024; // 10MB
+  // private maxBlobSize = 10 * 1024 * 1024; // 10MB
   private compressionThreshold = 1024; // 1KB
 
   constructor() {
     this.client = new WalrusClient({
-      network: (process.env.VITE_WALRUS_NETWORK as 'mainnet' | 'testnet' | undefined) || 'testnet',
+      network:
+        (import.meta.env.VITE_WALRUS_NETWORK as 'mainnet' | 'testnet' | undefined) || 'testnet',
+      suiRpcUrl: import.meta.env.VITE_SUI_RPC_URL || 'https://sui.testnet.rpc',
     });
     this.encryption = new EncryptionService();
     this.cache = new CacheService();
@@ -98,9 +102,9 @@ export class WalrusStorageService {
       // 4. 构建EncryptedData对象
       const encryptedData: EncryptedData = {
         algorithm: 'AES-256-GCM',
-        ciphertext: Array.from(ciphertext),
-        iv: Array.from(iv),
-        tag: Array.from(tag),
+        ciphertext: [...ciphertext],
+        iv: [...iv],
+        tag: [...tag],
         keyId: '', // 这个需要在实际实现中处理
       };
 
@@ -170,8 +174,8 @@ export class WalrusStorageService {
     const batchSize = 3; // 并发上传数量
     const results: string[] = [];
 
-    for (let i = 0; i < vaults.length; i += batchSize) {
-      const batch = vaults.slice(i, i + batchSize);
+    for (let index = 0; index < vaults.length; index += batchSize) {
+      const batch = vaults.slice(index, index + batchSize);
       const batchPromises = batch.map(vault =>
         this.uploadVault(vault, masterPassword).catch(error => {
           console.error('Failed to upload vault:', error);
@@ -206,7 +210,7 @@ export class WalrusStorageService {
   async getStorageStats(blobId: string): Promise<StorageStats> {
     try {
       const encrypted = await this.downloadWithRetry(blobId);
-      const metadata = await this.client.readBlob({ blobId });
+      // const metadata = await this.client.readBlob({ blobId });
 
       return {
         blobId,
@@ -228,7 +232,7 @@ export class WalrusStorageService {
 
     for (let attempt = 0; attempt < this.retryAttempts; attempt++) {
       try {
-        const result = await this.client.uploadBlob({
+        const result = await (this.client as any).uploadBlob({
           blobBytes: data,
           epochs: 10, // 10个epoch的存储时间
         });
@@ -251,8 +255,7 @@ export class WalrusStorageService {
 
     for (let attempt = 0; attempt < this.retryAttempts; attempt++) {
       try {
-        const blob = await this.client.downloadBlob(blobId);
-        return blob;
+        return await (this.client as any).downloadBlob(blobId);
       } catch (error) {
         lastError = error as Error;
         console.warn(`Download attempt ${attempt + 1} failed:`, error);
@@ -291,13 +294,17 @@ export class WalrusStorageService {
       await writer.write(data);
       await writer.close();
 
-      const chunks = [];
-      let result;
+      const chunks: Uint8Array[] = [];
+      let result: ReadableStreamReadResult<Uint8Array>;
       while (!(result = await reader.read()).done) {
-        chunks.push(result.value);
+        if (result.value) {
+          chunks.push(result.value);
+        }
       }
 
-      const compressed = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+      const compressed = new Uint8Array(
+        chunks.reduce((accumulator, chunk) => accumulator + chunk.length, 0)
+      );
       let offset = 0;
       for (const chunk of chunks) {
         compressed.set(chunk, offset);
@@ -346,16 +353,20 @@ export class WalrusStorageService {
       const writer = ds.writable.getWriter();
       const reader = ds.readable.getReader();
 
-      await writer.write(data);
+      await writer.write(data as BufferSource);
       await writer.close();
 
-      const chunks = [];
-      let result;
+      const chunks: Uint8Array[] = [];
+      let result: ReadableStreamReadResult<Uint8Array>;
       while (!(result = await reader.read()).done) {
-        chunks.push(result.value);
+        if (result.value) {
+          chunks.push(result.value);
+        }
       }
 
-      const decompressed = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+      const decompressed = new Uint8Array(
+        chunks.reduce((accumulator, chunk) => accumulator + chunk.length, 0)
+      );
       let offset = 0;
       for (const chunk of chunks) {
         decompressed.set(chunk, offset);
@@ -372,7 +383,7 @@ export class WalrusStorageService {
   }
 
   private validateVault(vault: VaultBlob): void {
-    if (!vault.metadata || !vault.metadata.id) {
+    if (!vault.metadata?.id) {
       throw new Error('Invalid vault metadata');
     }
 
@@ -444,9 +455,9 @@ export class WalrusStorageService {
     for (const change of changes) {
       switch (change.type) {
         case 'create':
-        case 'update':
+        case 'update': {
           if (change.entity === 'password') {
-            const index = updatedVault.passwords.findIndex(p => p.id === change.id);
+            const index = updatedVault.passwords.findIndex((p: any) => p.id === change.id);
             if (index >= 0) {
               updatedVault.passwords[index] = change.data;
             } else {
@@ -454,11 +465,13 @@ export class WalrusStorageService {
             }
           }
           break;
-        case 'delete':
+        }
+        case 'delete': {
           if (change.entity === 'password') {
-            updatedVault.passwords = updatedVault.passwords.filter(p => p.id !== change.id);
+            updatedVault.passwords = updatedVault.passwords.filter((p: any) => p.id !== change.id);
           }
           break;
+        }
       }
     }
 
@@ -470,7 +483,7 @@ export class WalrusStorageService {
     const encoder = new TextEncoder();
     const dataBuffer = encoder.encode(jsonString);
     const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashArray = [...new Uint8Array(hashBuffer)];
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
@@ -480,7 +493,7 @@ export class WalrusStorageService {
   }
 
   private calculateStorageCost(size: number, epochs: number): number {
-    const costPerByteEpoch = 0.000001; // 0.000001 SUI per byte per epoch
+    const costPerByteEpoch = 0.000_001; // 0.000001 SUI per byte per epoch
     return size * epochs * costPerByteEpoch;
   }
 

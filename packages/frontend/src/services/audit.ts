@@ -124,8 +124,8 @@ export class AuditService {
 
     // 计算平均响应时间
     const responseTimes = filteredLogs
-      .filter(log => log.metadata.duration)
-      .map(log => log.metadata.duration);
+      .filter(log => log.metadata['duration'])
+      .map(log => log.metadata['duration']);
     stats.averageResponseTime =
       responseTimes.length > 0
         ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
@@ -143,8 +143,7 @@ export class AuditService {
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
     const recentLogs = userLogs.filter(log => log.timestamp >= thirtyDaysAgo);
 
-    const score = this.calculateSecurityScore(recentLogs);
-    return score;
+    return this.calculateSecurityScore(recentLogs);
   }
 
   /**
@@ -163,7 +162,7 @@ export class AuditService {
         severity: 'medium',
         description: '检测到来自多个IP地址的活动',
         timestamp: Date.now(),
-        details: { locations: Array.from(locations) },
+        details: { locations: [...locations] },
       });
     }
 
@@ -305,9 +304,15 @@ export class AuditService {
   }
 
   private getSecurityLevel(score: number): 'excellent' | 'good' | 'fair' | 'poor' {
-    if (score >= 90) return 'excellent';
-    if (score >= 75) return 'good';
-    if (score >= 60) return 'fair';
+    if (score >= 90) {
+      return 'excellent';
+    }
+    if (score >= 75) {
+      return 'good';
+    }
+    if (score >= 60) {
+      return 'fair';
+    }
     return 'poor';
   }
 
@@ -354,7 +359,7 @@ async function getClientIP(): Promise<string> {
     // 例如：const response = await fetch('https://api.ipify.org?format=json');
     // return response.json().ip;
     return '127.0.0.1';
-  } catch (error) {
+  } catch {
     return 'unknown';
   }
 }
