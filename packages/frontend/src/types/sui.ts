@@ -1,14 +1,13 @@
 // Sui related type definitions
 export interface SuiTransactionResponse {
   digest: string;
-  status: 'success' | 'failure';
   effects: {
     status: { status: 'success' | 'failure' };
-    created?: Array<SuiObjectRef>;
-    mutated?: Array<SuiObjectRef>;
-    deleted?: Array<SuiObjectRef>;
+    created?: Array<SuiObjectReference>;
+    mutated?: Array<SuiObjectReference>;
+    deleted?: Array<SuiObjectReference>;
   };
-  timestamp: number;
+  timestamp?: number;
 }
 
 export interface VaultInfo {
@@ -56,7 +55,7 @@ export interface PermissionCapability {
   createdAt: number;
 }
 
-export interface SuiObjectRef {
+export interface SuiObjectReference {
   reference: {
     objectId: string;
   };
@@ -88,9 +87,19 @@ export interface WalletAdapter {
   connecting: boolean;
   connected: boolean;
   address?: string;
+  accounts: Array<{ address: string }>;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
-  signAndExecuteTransaction: (input: any) => Promise<SuiTransactionResponse>;
+  signAndExecuteTransaction: (input: {
+    transaction: any;
+    account: { address: string };
+    chain: string;
+  }) => Promise<SuiTransactionResponse>;
+  signAndExecuteTransactionBlock: (input: {
+    transactionBlock: any;
+    account: { address: string };
+    chain: string;
+  }) => Promise<SuiTransactionResponse>;
 }
 
 export interface SuiConfig {

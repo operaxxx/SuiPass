@@ -1,7 +1,8 @@
 // 加密安全工具
 // packages/frontend/src/utils/security.ts
 
-import * as argon2 from 'argon2-browser';
+import { hash } from 'argon2-browser';
+
 import { securityConfig } from '@/config/security';
 
 /**
@@ -28,9 +29,9 @@ export class SecurityUtils {
       const keySalt = salt || crypto.getRandomValues(new Uint8Array(this.SALT_LENGTH));
 
       // 使用Argon2id派生密钥
-      const derivedKey = await argon2.hash({
+      const derivedKey = await hash({
         pass: password,
-        salt: Array.from(keySalt),
+        salt: [...keySalt],
         type: 2, // Argon2id
         mem: securityConfig.encryption.keyDerivation.memory,
         time: securityConfig.encryption.keyDerivation.iterations,
@@ -39,7 +40,9 @@ export class SecurityUtils {
       });
 
       // 将派生密钥导入为CryptoKey
-      const rawKey = new Uint8Array(derivedKey.hashBytes);
+      const rawKey = new Uint8Array(
+        derivedKey.hashHex.match(/.{2}/g)?.map(byte => Number.parseInt(byte, 16)) || []
+      );
       const cryptoKey = await crypto.subtle.importKey(
         'raw',
         rawKey,
@@ -77,18 +80,18 @@ export class SecurityUtils {
       }
 
       // 加密数据
-      const encryptedData = await crypto.subtle.encrypt(
+      const encryptedResult = await crypto.subtle.encrypt(
         {
           name: 'AES-GCM',
-          iv,
+          iv: iv as BufferSource,
           tagLength: this.TAG_LENGTH * 8,
         },
         encryptionKey,
-        data
+        data as BufferSource
       );
 
       // 提取密文和认证标签
-      const encryptedArray = new Uint8Array(encryptedData);
+      const encryptedArray = new Uint8Array(encryptedResult);
       const ciphertext = encryptedArray.slice(0, -this.TAG_LENGTH);
       const tag = encryptedArray.slice(-this.TAG_LENGTH);
 
@@ -98,17 +101,22 @@ export class SecurityUtils {
       // 安全清除内存中的敏感数据
       await this.clearSensitiveData(encryptedArray);
 
-      return {
+      const encryptedData: EncryptedData = {
         algorithm: this.ALGORITHM,
-        ciphertext: Array.from(ciphertext),
-        iv: Array.from(iv),
-        tag: Array.from(tag),
-        salt: Array.from(salt),
+        ciphertext: [...ciphertext],
+        iv: [...iv],
+        tag: [...tag],
+        salt: [...salt],
         keyId,
-        context,
         version: 1,
         createdAt: Date.now(),
       };
+
+      if (context) {
+        encryptedData.context = context;
+      }
+
+      return encryptedData;
     } catch (error) {
       console.error('Encryption failed:', error);
       throw new Error('Failed to encrypt data');
@@ -154,11 +162,11 @@ export class SecurityUtils {
       const decrypted = await crypto.subtle.decrypt(
         {
           name: 'AES-GCM',
-          iv,
+          iv: iv as BufferSource,
           tagLength: this.TAG_LENGTH * 8,
         },
         decryptionKey,
-        encryptedWithTag
+        encryptedWithTag as BufferSource
       );
 
       // 安全清除内存中的敏感数据
@@ -204,7 +212,7 @@ export class SecurityUtils {
     try {
       const rawKey = await crypto.subtle.exportKey('raw', key);
       const hashBuffer = await crypto.subtle.digest('SHA-256', rawKey);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashArray = [...new Uint8Array(hashBuffer)];
       return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     } catch (error) {
       console.error('Failed to generate key ID:', error);
@@ -289,8 +297,10 @@ export class SecurityUtils {
       crypto.getRandomValues(cryptoArray);
 
       password = [];
-      for (let i = 0; i < length; i++) {
-        password.push(charset[cryptoArray[i] % charset.length]);
+      for (let index = 0; index < length; index++) {
+        const safeCharset = charset || '';
+        const charIndex = cryptoArray[index]! % (safeCharset.length || 1);
+        password.push(safeCharset[charIndex] || 'a');
       }
 
       attempts++;
@@ -310,18 +320,18 @@ export class SecurityUtils {
     password: string[],
     options: SecurePasswordOptions
   ): boolean {
-    const passwordStr = password.join('');
+    const passwordString = password.join('');
 
-    if (options.includeLowercase && !/[a-z]/.test(passwordStr)) {
+    if (options.includeLowercase && !/[a-z]/.test(passwordString)) {
       return false;
     }
-    if (options.includeUppercase && !/[A-Z]/.test(passwordStr)) {
+    if (options.includeUppercase && !/[A-Z]/.test(passwordString)) {
       return false;
     }
-    if (options.includeNumbers && !/[0-9]/.test(passwordStr)) {
+    if (options.includeNumbers && !/[0-9]/.test(passwordString)) {
       return false;
     }
-    if (options.includeSymbols && !/[^A-Za-z0-9]/.test(passwordStr)) {
+    if (options.includeSymbols && !/[^A-Za-z0-9]/.test(passwordString)) {
       return false;
     }
 
@@ -334,10 +344,18 @@ export class SecurityUtils {
   static calculatePasswordEntropy(password: string): number {
     let charsetSize = 0;
 
-    if (/[a-z]/.test(password)) charsetSize += 26;
-    if (/[A-Z]/.test(password)) charsetSize += 26;
-    if (/[0-9]/.test(password)) charsetSize += 10;
-    if (/[^A-Za-z0-9]/.test(password)) charsetSize += 32;
+    if (/[a-z]/.test(password)) {
+      charsetSize += 26;
+    }
+    if (/[A-Z]/.test(password)) {
+      charsetSize += 26;
+    }
+    if (/[0-9]/.test(password)) {
+      charsetSize += 10;
+    }
+    if (/[^A-Za-z0-9]/.test(password)) {
+      charsetSize += 32;
+    }
 
     return password.length * Math.log2(charsetSize);
   }
@@ -348,7 +366,7 @@ export class SecurityUtils {
   static estimateCrackTime(password: string): string {
     const entropy = this.calculatePasswordEntropy(password);
     const combinations = Math.pow(2, entropy);
-    const guessesPerSecond = 1000000000; // 10亿次/秒
+    const guessesPerSecond = 1_000_000_000; // 10亿次/秒
 
     const secondsToCrack = combinations / (2 * guessesPerSecond);
 
@@ -356,12 +374,12 @@ export class SecurityUtils {
       return `${Math.round(secondsToCrack)}秒`;
     } else if (secondsToCrack < 3600) {
       return `${Math.round(secondsToCrack / 60)}分钟`;
-    } else if (secondsToCrack < 86400) {
+    } else if (secondsToCrack < 86_400) {
       return `${Math.round(secondsToCrack / 3600)}小时`;
-    } else if (secondsToCrack < 31536000) {
-      return `${Math.round(secondsToCrack / 86400)}天`;
-    } else if (secondsToCrack < 31536000000) {
-      return `${Math.round(secondsToCrack / 31536000)}年`;
+    } else if (secondsToCrack < 31_536_000) {
+      return `${Math.round(secondsToCrack / 86_400)}天`;
+    } else if (secondsToCrack < 31_536_000_000) {
+      return `${Math.round(secondsToCrack / 31_536_000)}年`;
     } else {
       return '数千年';
     }
@@ -378,22 +396,38 @@ export class SecurityUtils {
     const feedback: string[] = [];
 
     // 长度评分
-    if (password.length >= 12) score += 30;
-    else if (password.length >= 8) score += 15;
-    else feedback.push('密码长度至少8个字符');
+    if (password.length >= 12) {
+      score += 30;
+    } else if (password.length >= 8) {
+      score += 15;
+    } else {
+      feedback.push('密码长度至少8个字符');
+    }
 
     // 复杂度评分
-    if (/[a-z]/.test(password)) score += 10;
-    else feedback.push('添加小写字母');
+    if (/[a-z]/.test(password)) {
+      score += 10;
+    } else {
+      feedback.push('添加小写字母');
+    }
 
-    if (/[A-Z]/.test(password)) score += 10;
-    else feedback.push('添加大写字母');
+    if (/[A-Z]/.test(password)) {
+      score += 10;
+    } else {
+      feedback.push('添加大写字母');
+    }
 
-    if (/[0-9]/.test(password)) score += 10;
-    else feedback.push('添加数字');
+    if (/[0-9]/.test(password)) {
+      score += 10;
+    } else {
+      feedback.push('添加数字');
+    }
 
-    if (/[^A-Za-z0-9]/.test(password)) score += 15;
-    else feedback.push('添加特殊字符');
+    if (/[^A-Za-z0-9]/.test(password)) {
+      score += 15;
+    } else {
+      feedback.push('添加特殊字符');
+    }
 
     // 唯一字符评分
     const uniqueChars = new Set(password).size;
@@ -425,17 +459,26 @@ export class SecurityUtils {
     }
 
     // 熵值评分
-    if (entropy >= 80) score += 20;
-    else if (entropy >= 60) score += 10;
-    else feedback.push('增加密码复杂度');
+    if (entropy >= 80) {
+      score += 20;
+    } else if (entropy >= 60) {
+      score += 10;
+    } else {
+      feedback.push('增加密码复杂度');
+    }
 
     score = Math.max(0, Math.min(100, score));
 
     let strength: PasswordStrengthLevel;
-    if (score >= 80) strength = 'very-strong';
-    else if (score >= 60) strength = 'strong';
-    else if (score >= 40) strength = 'medium';
-    else strength = 'weak';
+    if (score >= 80) {
+      strength = 'very-strong';
+    } else if (score >= 60) {
+      strength = 'strong';
+    } else if (score >= 40) {
+      strength = 'medium';
+    } else {
+      strength = 'weak';
+    }
 
     return {
       score,
@@ -467,9 +510,9 @@ export class SecurityUtils {
    */
   static secureBase64Encode(data: Uint8Array): string {
     return btoa(String.fromCharCode(...data))
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=/g, '');
+      .replaceAll('+', '-')
+      .replaceAll('/', '_')
+      .replaceAll('=', '');
   }
 
   /**
@@ -482,20 +525,141 @@ export class SecurityUtils {
       const base64 = encoded + padding;
 
       // 转换为标准Base64
-      const standardBase64 = base64.replace(/-/g, '+').replace(/_/g, '/');
+      const standardBase64 = base64.replaceAll('-', '+').replaceAll('_', '/');
 
       // 解码
       const binaryString = atob(standardBase64);
       const bytes = new Uint8Array(binaryString.length);
 
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+      for (let index = 0; index < binaryString.length; index++) {
+        bytes[index] = binaryString.charCodeAt(index);
       }
 
       return bytes;
-    } catch (error) {
+    } catch {
       throw new Error('Invalid Base64 encoding');
     }
+  }
+
+  /**
+   * 验证用户输入以防止XSS攻击
+   */
+  static validateInput(input: string, context: string = 'default'): boolean {
+    if (!input || typeof input !== 'string') {
+      return false;
+    }
+
+    // 更全面的XSS检测模式
+    const xssPatterns = [
+      // 基本的脚本标签
+      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+      /javascript:/gi,
+      /on\w+\s*=/gi,
+      /<\s*\/?\s*script\s*>/gi,
+
+      // 危险的HTML标签
+      /<\s*\/?\s*iframe\s*>/gi,
+      /<\s*\/?\s*object\s*>/gi,
+      /<\s*\/?\s*embed\s*>/gi,
+      /<\s*\/?\s*link\s*>/gi,
+      /<\s*\/?\s*meta\s*>/gi,
+      /<\s*\/?\s*img\s*>/gi,
+      /<\s*\/?\s*input\s*>/gi,
+
+      // 危险的CSS和表达式
+      /expression\s*\(/gi,
+      /vbscript:/gi,
+      /data:\s*text\/html/gi,
+      /data:\s*text\/javascript/gi,
+
+      // 事件处理器
+      /onload\s*=/gi,
+      /onerror\s*=/gi,
+      /onclick\s*=/gi,
+      /onmouseover\s*=/gi,
+      /onfocus\s*=/gi,
+      /onblur\s*=/gi,
+
+      // 危险的属性
+      /src\s*=\s*["']javascript:/gi,
+      /href\s*=\s*["']javascript:/gi,
+      /background\s*=\s*["']javascript:/gi,
+
+      // 编码的攻击
+      /&lt;script&gt;/gi,
+      /&lt;\/script&gt;/gi,
+      /%3Cscript%3E/gi,
+      /%3C%2Fscript%3E/gi,
+
+      // Unicode和HTML实体
+      /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g,
+      /&#[xX][0-9a-fA-F]+;/g,
+      /&#[0-9]+;/g,
+    ];
+
+    // 检查所有XSS模式
+    for (const pattern of xssPatterns) {
+      if (pattern.test(input)) {
+        return false;
+      }
+    }
+
+    // 根据上下文进行额外验证
+    switch (context) {
+      case 'url': {
+        // URL验证
+        try {
+          new URL(input);
+          return true;
+        } catch {
+          return false;
+        }
+      }
+
+      case 'email': {
+        // 邮箱验证
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(input);
+      }
+
+      case 'username': {
+        // 用户名验证：只允许字母、数字、下划线
+        const usernameRegex = /^[a-zA-Z0-9_]+$/;
+        return usernameRegex.test(input) && input.length >= 3 && input.length <= 50;
+      }
+
+      case 'password': {
+        // 密码验证：不允许包含危险字符
+        return !/[<>\"'&]/.test(input);
+      }
+
+      default: {
+        // 默认验证：不允许HTML标签和JavaScript
+        return !/<[^>]*>|javascript:/i.test(input);
+      }
+    }
+  }
+
+  /**
+   * 净化用户输入（移除危险内容）
+   */
+  static sanitizeInput(input: string): string {
+    if (!input || typeof input !== 'string') {
+      return '';
+    }
+
+    // 移除危险的HTML标签
+    return input
+      .replaceAll(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replaceAll(/javascript:/gi, '')
+      .replaceAll(/on\w+\s*=/gi, '')
+      .replaceAll(/<\s*\/?\s*(script|iframe|object|embed|link|meta|img|input)\s*[^>]*>/gi, '')
+      .replaceAll(/expression\s*\(/gi, '')
+      .replaceAll(/vbscript:/gi, '')
+      .replaceAll(/data:\s*text\/html/gi, '')
+      .replaceAll(/&lt;script&gt;/gi, '')
+      .replaceAll(/&lt;\/script&gt;/gi, '')
+      .trim();
   }
 }
 

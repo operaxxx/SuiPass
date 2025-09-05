@@ -12,8 +12,25 @@ export interface VaultBlob {
     version: number;
     created_at: number;
     updated_at: number;
+    total_items?: number;
+    total_size?: number;
+    encryption?: {
+      algorithm: string;
+      key_id: string;
+      iv: string;
+      version: number;
+      key_derivation?: {
+        algorithm: string;
+        iterations: number;
+        memory: number;
+        parallelism: number;
+        salt: string;
+      };
+    };
   };
   passwords: PasswordItem[];
+  folders: Folder[];
+  settings?: VaultSettings;
   compression: {
     algorithm: 'none' | 'gzip';
     ratio: number;
@@ -87,6 +104,21 @@ export interface EncryptedData {
   };
 }
 
+export interface PasswordStrength {
+  score: number;
+  strength: 'weak' | 'medium' | 'strong' | 'very-strong';
+  feedback: string[];
+  crackTime: string;
+}
+
+export interface PasswordOptions {
+  includeUppercase?: boolean;
+  includeLowercase?: boolean;
+  includeNumbers?: boolean;
+  includeSymbols?: boolean;
+  excludeSimilar?: boolean;
+}
+
 export interface UploadLog {
   blobId: string;
   size: number;
@@ -111,6 +143,20 @@ export interface VaultMetadata {
   updated_at: number;
   item_count: number;
   total_size: number;
+}
+
+export interface VaultSettings {
+  auto_lock_timeout: number;
+  max_items: number;
+  enable_sharing: boolean;
+  require_2fa: boolean;
+  backup_enabled: boolean;
+  theme?: string;
+  default_password_length?: number;
+  require_master_password?: boolean;
+  enable_two_factor?: boolean;
+  enable_biometrics?: boolean;
+  enable_sync?: boolean;
 }
 
 export interface PasswordItem {

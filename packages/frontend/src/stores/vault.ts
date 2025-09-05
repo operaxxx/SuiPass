@@ -3,19 +3,13 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+
+import { AuditService } from '@/services/audit';
+import { CacheService } from '@/services/cache';
 import { SuiService } from '@/services/sui';
 import { WalrusStorageService } from '@/services/walrus';
-import { EncryptionService } from '@/services/encryption';
-import { CacheService } from '@/services/cache';
-import { AuditService } from '@/services/audit';
-import type {
-  VaultBlob,
-  VaultInfo,
-  VaultSettings,
-  PasswordItem,
-  Folder,
-  PermissionCapability,
-} from '@/types';
+import type { VaultBlob, VaultInfo, PasswordItem, PermissionCapability } from '@/types';
+import type { VaultSettings } from '@/types/walrus';
 
 interface VaultState {
   // 状态
@@ -63,7 +57,6 @@ interface VaultState {
 // 创建服务实例
 const suiService = new SuiService();
 const walrusService = new WalrusStorageService();
-const encryptionService = new EncryptionService();
 const cacheService = new CacheService();
 const auditService = new AuditService();
 
@@ -93,6 +86,7 @@ export const useVaultStore = create<VaultState>()(
             metadata: {
               id: crypto.randomUUID(),
               name,
+              version: 1,
               created_at: Date.now(),
               updated_at: Date.now(),
               total_items: 0,
@@ -105,7 +99,7 @@ export const useVaultStore = create<VaultState>()(
                 key_derivation: {
                   algorithm: 'Argon2id',
                   iterations: 3,
-                  memory: 65536,
+                  memory: 65_536,
                   parallelism: 1,
                   salt: '',
                 },
@@ -140,7 +134,13 @@ export const useVaultStore = create<VaultState>()(
             version: 1,
             createdAt: Date.now(),
             updatedAt: Date.now(),
-            settings,
+            settings: {
+              autoLockTimeout: settings.auto_lock_timeout,
+              maxItems: settings.max_items,
+              enableSharing: settings.enable_sharing,
+              require2fa: settings.require_2fa,
+              backupEnabled: settings.backup_enabled,
+            },
           };
 
           set(state => ({
@@ -159,7 +159,7 @@ export const useVaultStore = create<VaultState>()(
           });
         } catch (error) {
           set({
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
             isLoading: false,
           });
           throw error;
@@ -199,7 +199,7 @@ export const useVaultStore = create<VaultState>()(
           }));
         } catch (error) {
           set({
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
             isLoading: false,
           });
           throw error;
@@ -237,7 +237,7 @@ export const useVaultStore = create<VaultState>()(
           });
         } catch (error) {
           set({
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
             isLoading: false,
           });
           throw error;
@@ -264,7 +264,7 @@ export const useVaultStore = create<VaultState>()(
           });
         } catch (error) {
           set({
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
             isLoading: false,
           });
           throw error;
@@ -285,7 +285,7 @@ export const useVaultStore = create<VaultState>()(
           });
         } catch (error) {
           set({
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
             isLoading: false,
           });
           throw error;
@@ -326,7 +326,7 @@ export const useVaultStore = create<VaultState>()(
           const newBlobId = await walrusService.uploadVault(updatedVault, masterPassword);
 
           // 更新智能合约
-          await suiService.updateVault(state.currentVault.id, newBlobId);
+          await suiService.updateVault(state.currentVault!.id, newBlobId);
 
           // 更新本地状态
           set({
@@ -349,7 +349,7 @@ export const useVaultStore = create<VaultState>()(
             metadata: { title: newPassword.title },
           });
         } catch (error) {
-          set({ error: error.message });
+          set({ error: (error as Error).message });
           throw error;
         }
       },
@@ -381,7 +381,7 @@ export const useVaultStore = create<VaultState>()(
           const masterPassword = await getMasterPassword();
           const newBlobId = await walrusService.uploadVault(updatedVault, masterPassword);
 
-          await suiService.updateVault(state.currentVault.id, newBlobId);
+          await suiService.updateVault(state.currentVault!.id, newBlobId);
 
           set({
             currentVaultData: updatedVault,
@@ -395,7 +395,7 @@ export const useVaultStore = create<VaultState>()(
               : null,
           });
         } catch (error) {
-          set({ error: error.message });
+          set({ error: (error as Error).message });
           throw error;
         }
       },
@@ -428,7 +428,7 @@ export const useVaultStore = create<VaultState>()(
           const masterPassword = await getMasterPassword();
           const newBlobId = await walrusService.uploadVault(updatedVault, masterPassword);
 
-          await suiService.updateVault(state.currentVault.id, newBlobId);
+          await suiService.updateVault(state.currentVault!.id, newBlobId);
 
           set({
             currentVaultData: updatedVault,
@@ -442,7 +442,7 @@ export const useVaultStore = create<VaultState>()(
               : null,
           });
         } catch (error) {
-          set({ error: error.message });
+          set({ error: (error as Error).message });
           throw error;
         }
       },
@@ -498,7 +498,7 @@ export const useVaultStore = create<VaultState>()(
           }));
         } catch (error) {
           set({
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
             isLoading: false,
           });
           throw error;
@@ -518,7 +518,7 @@ export const useVaultStore = create<VaultState>()(
           }));
         } catch (error) {
           set({
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
             isLoading: false,
           });
           throw error;
@@ -539,7 +539,7 @@ export const useVaultStore = create<VaultState>()(
           });
         } catch (error) {
           set({
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? (error as Error).message : 'Unknown error',
             isLoading: false,
           });
           throw error;
@@ -577,9 +577,9 @@ export const useVaultStore = create<VaultState>()(
           }
 
           // 创建新的保险库
-          await get().createVault(vaultData.metadata.name, vaultData.settings);
+          await get().createVault(vaultData.metadata.name, vaultData.settings!);
         } catch (error) {
-          set({ error: 'Failed to import vault: ' + error.message });
+          set({ error: `Failed to import vault: ${(error as Error).message}` });
           throw error;
         }
       },
@@ -616,6 +616,6 @@ async function generateChecksum(vault: VaultBlob): Promise<string> {
   const encoder = new TextEncoder();
   const dataBuffer = encoder.encode(jsonString);
   const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashArray = [...new Uint8Array(hashBuffer)];
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }

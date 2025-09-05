@@ -1,22 +1,8 @@
-// Common type definitions used across the application
-export interface Vault {
-  id: string;
-  name: string;
-  description?: string;
-  items: PasswordItem[];
-  folders: Folder[];
-  settings: VaultSettings;
-  created_at: number;
-  updated_at: number;
-  version: number;
-  is_synced?: boolean;
-  blob_id?: string;
-}
-
 // Re-export commonly used types from other modules
 export type { VaultBlob, DeltaUpdate } from './walrus';
 export type { VaultInfo, VaultEvent, NetworkInfo, PermissionCapability } from './sui';
 
+// Direct type definitions to avoid circular imports
 export interface PasswordItem {
   id: string;
   type: 'login' | 'card' | 'identity' | 'secure-note';
@@ -30,7 +16,6 @@ export interface PasswordItem {
   tags: string[];
   created_at: number;
   updated_at: number;
-  custom_fields?: Record<string, string>;
 }
 
 export interface Folder {
@@ -44,13 +29,32 @@ export interface Folder {
 }
 
 export interface VaultSettings {
-  autoLockTimeout: number;
-  enableBiometrics: boolean;
-  enableSync: boolean;
-  theme: 'light' | 'dark' | 'system';
-  defaultPasswordLength: number;
-  requireMasterPassword: boolean;
-  enableTwoFactor: boolean;
+  auto_lock_timeout: number;
+  max_items: number;
+  enable_sharing: boolean;
+  require_2fa: boolean;
+  backup_enabled: boolean;
+  theme?: string;
+  default_password_length?: number;
+  require_master_password?: boolean;
+  enable_two_factor?: boolean;
+  enable_biometrics?: boolean;
+  enable_sync?: boolean;
+}
+
+// Common type definitions used across the application
+export interface Vault {
+  id: string;
+  name: string;
+  description?: string;
+  items: PasswordItem[];
+  folders: Folder[];
+  settings: VaultSettings;
+  created_at: number;
+  updated_at: number;
+  version: number;
+  is_synced?: boolean;
+  blob_id?: string;
 }
 
 export interface EncryptionResult {

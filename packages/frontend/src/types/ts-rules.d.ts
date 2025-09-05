@@ -1,8 +1,6 @@
 // TypeScript 开发规范
 // packages/frontend/src/types/ts-rules.d.ts
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 // ============================================================================
 // 基础类型定义规范
 // ============================================================================
@@ -98,14 +96,18 @@ export type NonNullable<T> = T extends null | undefined ? never : T;
 /**
  * 函数参数类型
  */
-export type Parameters<T extends (...args: any[]) => any> = T extends (...args: infer P) => any
+export type Parameters<T extends (...arguments_: any[]) => any> = T extends (
+  ...arguments_: infer P
+) => any
   ? P
   : never;
 
 /**
  * 函数返回类型
  */
-export type ReturnType<T extends (...args: any[]) => any> = T extends (...args: any[]) => infer R
+export type ReturnType<T extends (...arguments_: any[]) => any> = T extends (
+  ...arguments_: any[]
+) => infer R
   ? R
   : any;
 
@@ -139,61 +141,9 @@ export interface DecryptionResult {
   verified: boolean;
 }
 
-/**
- * 密码强度评估结果
- */
-export interface PasswordStrength {
-  /** 强度分数 (0-100) */
-  score: number;
-  /** 强度等级 */
-  strength: 'weak' | 'medium' | 'strong' | 'very-strong';
-  /** 改进建议 */
-  feedback: string[];
-  /** 预估破解时间 */
-  crackTime: string;
-}
-
-/**
- * 加密数据结构
- */
-export interface EncryptedData {
-  /** 加密算法 */
-  algorithm: string;
-  /** 密文 */
-  ciphertext: number[];
-  /** 初始化向量 */
-  iv: number[];
-  /** 认证标签 */
-  tag: number[];
-  /** 密钥ID */
-  keyId: string;
-  /** 密钥派生配置 */
-  keyDerivation: {
-    algorithm: string;
-    iterations: number;
-    memory: number;
-    parallelism: number;
-    saltLength: number;
-  };
-}
-
 // ============================================================================
 // 区块链相关类型
 // ============================================================================
-
-/**
- * Sui网络信息
- */
-export interface NetworkInfo {
-  /** 网络名称 */
-  name: 'mainnet' | 'testnet' | 'devnet' | 'local';
-  /** RPC URL */
-  rpcUrl: string;
-  /** 链ID */
-  chainId: string;
-  /** 是否支持ZKLogin */
-  supportsZkLogin: boolean;
-}
 
 /**
  * 钱包信息
@@ -207,32 +157,6 @@ export interface WalletInfo {
   isConnected: boolean;
   /** 网络信息 */
   network: NetworkInfo;
-}
-
-/**
- * 权限能力
- */
-export interface PermissionCapability {
-  /** 能力ID */
-  id: string;
-  /** 保险库ID */
-  vaultId: string;
-  /** 授予对象 */
-  grantedTo: string;
-  /** 授予者 */
-  grantedBy: string;
-  /** 权限级别 */
-  permissions: number;
-  /** 过期时间 */
-  expiresAt: number;
-  /** 使用次数 */
-  usageCount: number;
-  /** 最大使用次数 */
-  maxUsage: number;
-  /** 使用条件 */
-  conditions: string[];
-  /** 创建时间 */
-  createdAt: number;
 }
 
 // ============================================================================
@@ -319,7 +243,7 @@ export interface AuditEvent {
 /**
  * 基础组件Props
  */
-export interface BaseComponentProps {
+export interface BaseComponentProperties {
   /** 组件ID */
   id?: string;
   /** 自定义类名 */
@@ -331,7 +255,7 @@ export interface BaseComponentProps {
 /**
  * 加载状态Props
  */
-export interface LoadingProps extends BaseComponentProps {
+export interface LoadingProperties extends BaseComponentProperties {
   /** 是否显示加载状态 */
   isLoading?: boolean;
   /** 加载文本 */
@@ -343,7 +267,7 @@ export interface LoadingProps extends BaseComponentProps {
 /**
  * 错误状态Props
  */
-export interface ErrorProps extends BaseComponentProps {
+export interface ErrorProperties extends BaseComponentProperties {
   /** 错误信息 */
   error?: string | Error;
   /** 重试函数 */
@@ -604,8 +528,8 @@ export interface LocaleConfig {
  * 防抖函数
  * @template T - 函数类型
  */
-export type DebouncedFunction<T extends (...args: any[]) => any> = {
-  (...args: Parameters<T>): Promise<ReturnType<T>>;
+export type DebouncedFunction<T extends (...arguments_: any[]) => any> = {
+  (...arguments_: Parameters<T>): Promise<ReturnType<T>>;
   cancel: () => void;
   flush: () => Promise<ReturnType<T>>;
 };
@@ -614,8 +538,8 @@ export type DebouncedFunction<T extends (...args: any[]) => any> = {
  * 节流函数
  * @template T - 函数类型
  */
-export type ThrottledFunction<T extends (...args: any[]) => any> = {
-  (...args: Parameters<T>): ReturnType<T>;
+export type ThrottledFunction<T extends (...arguments_: any[]) => any> = {
+  (...arguments_: Parameters<T>): ReturnType<T>;
   cancel: () => void;
 };
 
@@ -623,7 +547,7 @@ export type ThrottledFunction<T extends (...args: any[]) => any> = {
  * 记忆化函数
  * @template T - 函数类型
  */
-export type MemoizedFunction<T extends (...args: any[]) => any> = {
-  (...args: Parameters<T>): ReturnType<T>;
+export type MemoizedFunction<T extends (...arguments_: any[]) => any> = {
+  (...arguments_: Parameters<T>): ReturnType<T>;
   clear: () => void;
 };
